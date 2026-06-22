@@ -184,7 +184,14 @@
             <h3 class="modal-titulo" id="produto-modal-titulo">Novo Produto</h3>
             <div class="form-group"><label>Nome / Sabor</label><input type="text" id="produto-nome" placeholder="Ex.: Trufa de Maracujá" /></div>
             <div class="form-row">
-              <div class="form-group"><label>Preço de venda (R$)</label><input type="number" id="produto-preco" value="0" min="0" step="0.01" /></div>
+              <div class="form-group"><label>Preço unitário (R$)</label><input type="number" id="produto-preco" value="0" min="0" step="0.01" /></div>
+            </div>
+            <div class="form-group" style="margin-top:10px">
+              <label style="font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Preço promocional (opcional)</label>
+              <div class="form-row" style="margin-top:6px">
+                <div class="form-group"><label>A partir de (un.)</label><input type="number" id="produto-qtd-promo" value="0" min="0" step="1" placeholder="0 = sem promoção" /></div>
+                <div class="form-group"><label>Preço promo (R$)</label><input type="number" id="produto-preco-promo" value="0" min="0" step="0.01" /></div>
+              </div>
             </div>
             <div class="form-group"><label>Descrição (opcional)</label><input type="text" id="produto-descricao" placeholder="Detalhes do produto" /></div>
             <div class="modal-acoes">
@@ -212,7 +219,11 @@
             </div>
             <div class="form-row">
               <div class="form-group"><label>Quantidade</label><input type="number" id="despesa-qtd" value="1" min="0.001" step="0.001" /></div>
-              <div class="form-group"><label>Valor Total (R$)</label><input type="number" id="despesa-valor" value="0" min="0" step="0.01" /></div>
+              <div class="form-group"><label>Valor unitário (R$)</label><input type="number" id="despesa-vunit" value="0" min="0" step="0.01" /></div>
+            </div>
+            <div class="form-group">
+              <label>Total calculado</label>
+              <div class="total-calculado" id="despesa-total-display">R$ 0,00</div>
             </div>
             <div class="form-group"><label>Data da compra</label><input type="date" id="despesa-data" /></div>
             <div class="form-group"><label>Observação (opcional)</label><input type="text" id="despesa-obs" placeholder="Onde comprou, etc." /></div>
@@ -277,9 +288,11 @@
             <div class="form-group"><label>Local (de onde saiu)</label>
               <select id="venda-local"><option value="">Selecione...</option></select>
             </div>
-            <div class="form-row">
-              <div class="form-group"><label>Quantidade</label><input type="number" id="venda-qtd" value="1" min="1" /></div>
-              <div class="form-group"><label>Valor Total (R$)</label><input type="number" id="venda-valor" value="0" min="0" step="0.01" /></div>
+            <div class="form-group"><label>Quantidade</label><input type="number" id="venda-qtd" value="1" min="1" /></div>
+            <div id="venda-preco-info" class="preco-info" style="display:none"></div>
+            <div class="form-group">
+              <label>Valor Total (R$) <span style="color:var(--muted);font-weight:400;font-size:.78rem">— edite se necessário</span></label>
+              <input type="number" id="venda-valor" value="0" min="0" step="0.01" />
             </div>
             <div class="form-group"><label>Data</label><input type="date" id="venda-data" /></div>
             <div class="form-group"><label>Observação</label><input type="text" id="venda-obs" placeholder="Cliente, evento, etc." /></div>

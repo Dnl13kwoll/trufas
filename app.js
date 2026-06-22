@@ -331,8 +331,11 @@ async function carregarProdutos() {
   const { data } = await db.from('produtos').select('*').eq('user_id', usuario.id).eq('ativo', true).order('nome');
   const el = document.getElementById('lista-produtos');
   if (!data?.length) { el.innerHTML = '<div class="lista-vazia">Nenhum produto cadastrado.</div>'; return; }
-  el.innerHTML = data.map(p => `
-    <div class="item-card">
+  el.innerHTML = data.map(p => {
+    const promo = p.preco_promocional > 0 && p.qtd_min_promocional > 0
+      ? `<span class="item-card-meta" style="color:var(--green)">🏷️ ${R$(p.preco_promocional)}/un. a partir de ${p.qtd_min_promocional} un.</span>`
+      : '';
+    return `<div class="item-card">
       <div class="item-card-header">
         <span class="item-card-nome">🍬 ${p.nome}</span>
         <div class="item-card-acoes">
@@ -341,15 +344,19 @@ async function carregarProdutos() {
         </div>
       </div>
       <span class="item-card-meta">${R$(p.preco_venda)} / un.</span>
+      ${promo}
       ${p.descricao ? `<span class="item-card-meta">${p.descricao}</span>` : ''}
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function fecharModalProduto() {
   document.getElementById('modal-produto').style.display = 'none';
-  document.getElementById('produto-nome').value      = '';
-  document.getElementById('produto-preco').value     = '0';
-  document.getElementById('produto-descricao').value = '';
+  document.getElementById('produto-nome').value        = '';
+  document.getElementById('produto-preco').value       = '0';
+  document.getElementById('produto-qtd-promo').value   = '0';
+  document.getElementById('produto-preco-promo').value = '0';
+  document.getElementById('produto-descricao').value   = '';
   produtoEditandoId = null;
 }
 
@@ -357,11 +364,17 @@ document.getElementById('btn-novo-produto').addEventListener('click', () => { pr
 document.getElementById('btn-cancelar-produto').addEventListener('click', fecharModalProduto);
 
 document.getElementById('btn-salvar-produto').addEventListener('click', async () => {
-  const nome      = document.getElementById('produto-nome').value.trim();
-  const preco     = parseFloat(document.getElementById('produto-preco').value) || 0;
-  const descricao = document.getElementById('produto-descricao').value.trim();
+  const nome       = document.getElementById('produto-nome').value.trim();
+  const preco      = parseFloat(document.getElementById('produto-preco').value) || 0;
+  const qtdPromo   = parseInt(document.getElementById('produto-qtd-promo').value)   || 0;
+  const precoPromo = parseFloat(document.getElementById('produto-preco-promo').value) || 0;
+  const descricao  = document.getElementById('produto-descricao').value.trim();
   if (!nome) { toast('Informe o nome do produto.', 'err'); return; }
-  const dados = { nome, preco_venda: preco, descricao, user_id: usuario.id, ativo: true };
+  const dados = {
+    nome, preco_venda: preco, descricao, user_id: usuario.id, ativo: true,
+    preco_promocional: precoPromo > 0 ? precoPromo : null,
+    qtd_min_promocional: qtdPromo > 0 ? qtdPromo : 0,
+  };
   const { error } = produtoEditandoId
     ? await db.from('produtos').update(dados).eq('id', produtoEditandoId)
     : await db.from('produtos').insert(dados);
@@ -375,9 +388,11 @@ window.editarProduto = async (id) => {
   const { data } = await db.from('produtos').select('*').eq('id', id).single();
   if (!data) return;
   produtoEditandoId = id;
-  document.getElementById('produto-nome').value      = data.nome;
-  document.getElementById('produto-preco').value     = data.preco_venda;
-  document.getElementById('produto-descricao').value = data.descricao || '';
+  document.getElementById('produto-nome').value        = data.nome;
+  document.getElementById('produto-preco').value       = data.preco_venda;
+  document.getElementById('produto-qtd-promo').value   = data.qtd_min_promocional || 0;
+  document.getElementById('produto-preco-promo').value = data.preco_promocional   || 0;
+  document.getElementById('produto-descricao').value   = data.descricao || '';
   document.getElementById('produto-modal-titulo').textContent = 'Editar Produto';
   document.getElementById('modal-produto').style.display = 'flex';
 };
@@ -393,54 +408,124 @@ async function carregarDespesas() {
   const mes = document.getElementById('despesa-filtro-mes')?.value || mesAtual();
   const ini = mes + '-01', fim = mes + '-31';
 
-  const { data } = await db.from('despesas')
-    .select('*, insumos(nome, unidade)')
-    .eq('user_id', usuario.id)
-    .gte('data_compra', ini).lte('data_compra', fim)
-    .order('data_compra', { ascending: false });
+  const [{ data }, { data: historico }] = await Promise.all([
+    db.from('despesas')
+      .select('*, insumos(nome, unidade)')
+      .eq('user_id', usuario.id)
+      .gte('data_compra', ini).lte('data_compra', fim)
+      .order('data_compra', { ascending: false }),
+    db.from('despesas')
+      .select('data_compra, valor_unitario, quantidade, valor_total, insumos(id, nome, unidade)')
+      .eq('user_id', usuario.id)
+      .order('data_compra', { ascending: true })
+      .limit(200),
+  ]);
 
   const el = document.getElementById('lista-despesas');
-  if (!data?.length) { el.innerHTML = '<div class="lista-vazia">Nenhuma despesa neste mês.</div>'; return; }
 
-  const total = data.reduce((s, d) => s + parseFloat(d.valor_total || 0), 0);
-  el.innerHTML = `
-    <div style="margin-bottom:10px;font-size:.85rem;color:var(--muted)">Total: <strong style="color:var(--red)">${R$(total)}</strong></div>
-    <table class="tabela">
-      <thead><tr><th>Data</th><th>Insumo</th><th>Qtd</th><th>Valor</th><th>Preço unit.</th><th></th></tr></thead>
-      <tbody>${data.map(d => {
-        const pu = d.quantidade > 0 ? d.valor_total / d.quantidade : 0;
-        return `<tr>
-          <td>${d.data_compra}</td>
-          <td>${d.insumos?.nome || '—'}</td>
-          <td>${d.quantidade} ${d.insumos?.unidade || ''}</td>
-          <td style="color:var(--red)">${R$(d.valor_total)}</td>
-          <td style="color:var(--muted);font-size:.78rem">${R$(pu)}/${d.insumos?.unidade || 'un'}</td>
-          <td><button class="btn-icon deletar" onclick="deletarDespesa('${d.id}')">🗑️</button></td>
-        </tr>`;
-      }).join('')}</tbody>
-    </table>`;
+  // ── Tabela do mês ──────────────────────────────────────────────
+  let html = '';
+  if (!data?.length) {
+    html += '<div class="lista-vazia">Nenhuma despesa neste mês.</div>';
+  } else {
+    const total = data.reduce((s, d) => s + parseFloat(d.valor_total || 0), 0);
+    html += `
+      <div style="margin-bottom:10px;font-size:.85rem;color:var(--muted)">Total do mês: <strong style="color:var(--red)">${R$(total)}</strong></div>
+      <table class="tabela">
+        <thead><tr><th>Data</th><th>Insumo</th><th>Qtd</th><th>Valor unit.</th><th>Total</th><th></th></tr></thead>
+        <tbody>${data.map(d => {
+          const pu = parseFloat(d.valor_unitario) || (d.quantidade > 0 ? d.valor_total / d.quantidade : 0);
+          return `<tr>
+            <td>${d.data_compra}</td>
+            <td>${d.insumos?.nome || '—'}</td>
+            <td>${d.quantidade} ${d.insumos?.unidade || ''}</td>
+            <td style="color:var(--accent)">${R$(pu)}/${d.insumos?.unidade || 'un'}</td>
+            <td style="color:var(--red)">${R$(d.valor_total)}</td>
+            <td><button class="btn-icon deletar" onclick="deletarDespesa('${d.id}')">🗑️</button></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>`;
+  }
+
+  // ── Histórico de preços por insumo ──────────────────────────────
+  if (historico?.length) {
+    const porInsumo = {};
+    historico.forEach(d => {
+      const id   = d.insumos?.id;
+      const nome = d.insumos?.nome;
+      const un   = d.insumos?.unidade || 'un';
+      if (!id || !nome) return;
+      if (!porInsumo[id]) porInsumo[id] = { nome, un, compras: [] };
+      const pu = parseFloat(d.valor_unitario) || (d.quantidade > 0 ? d.valor_total / d.quantidade : 0);
+      porInsumo[id].compras.push({ data: d.data_compra, pu });
+    });
+
+    const insumosComHistorico = Object.values(porInsumo).filter(i => i.compras.length > 0);
+    if (insumosComHistorico.length) {
+      html += `<div class="rel-section" style="margin-top:24px">
+        <div class="rel-section-titulo">Histórico de Preços por Insumo</div>
+        ${insumosComHistorico.map(({ nome, un, compras }) => {
+          const ultimo = compras[compras.length - 1].pu;
+          const anterior = compras.length > 1 ? compras[compras.length - 2].pu : null;
+          const tendencia = anterior === null ? '' : ultimo > anterior
+            ? '<span style="color:var(--red);font-size:.8rem"> ▲</span>'
+            : ultimo < anterior
+              ? '<span style="color:var(--green);font-size:.8rem"> ▼</span>'
+              : '<span style="color:var(--muted);font-size:.8rem"> –</span>';
+          const linhas = compras.slice(-6).map((c, i, arr) => {
+            const prev = i > 0 ? arr[i-1].pu : null;
+            const cor  = prev === null ? '' : c.pu > prev ? 'color:var(--red)' : c.pu < prev ? 'color:var(--green)' : 'color:var(--muted)';
+            return `<tr><td style="color:var(--muted);font-size:.78rem">${c.data}</td><td style="text-align:right;${cor}">${R$(c.pu)}/${un}</td></tr>`;
+          }).join('');
+          return `<div class="historico-insumo-card">
+            <div class="historico-insumo-titulo">${nome}${tendencia}</div>
+            <div style="font-size:.8rem;color:var(--muted);margin-bottom:6px">Último: <strong style="color:var(--accent)">${R$(ultimo)}/${un}</strong></div>
+            <table class="tabela" style="margin:0"><tbody>${linhas}</tbody></table>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }
+  }
+
+  el.innerHTML = html;
+}
+
+function recalcularTotalDespesa() {
+  const qtd   = parseFloat(document.getElementById('despesa-qtd').value)   || 0;
+  const vunit = parseFloat(document.getElementById('despesa-vunit').value) || 0;
+  const total = qtd * vunit;
+  document.getElementById('despesa-total-display').textContent = R$(total);
 }
 
 document.getElementById('btn-nova-despesa').addEventListener('click', async () => {
   await popularSelect('despesa-insumo', 'insumos');
-  document.getElementById('despesa-data').value = hoje();
+  document.getElementById('despesa-data').value  = hoje();
+  document.getElementById('despesa-qtd').value   = '1';
+  document.getElementById('despesa-vunit').value = '0';
+  document.getElementById('despesa-total-display').textContent = R$(0);
   document.getElementById('modal-despesa').style.display = 'flex';
 });
+document.getElementById('despesa-qtd').addEventListener('input',   recalcularTotalDespesa);
+document.getElementById('despesa-vunit').addEventListener('input',  recalcularTotalDespesa);
 document.getElementById('btn-cancelar-despesa').addEventListener('click', () => { document.getElementById('modal-despesa').style.display = 'none'; });
 
 document.getElementById('btn-salvar-despesa').addEventListener('click', async () => {
   const insumo_id = document.getElementById('despesa-insumo').value;
-  const qtd       = parseFloat(document.getElementById('despesa-qtd').value) || 0;
-  const valor     = parseFloat(document.getElementById('despesa-valor').value) || 0;
+  const qtd       = parseFloat(document.getElementById('despesa-qtd').value)   || 0;
+  const vunit     = parseFloat(document.getElementById('despesa-vunit').value) || 0;
   const data_c    = document.getElementById('despesa-data').value;
   const obs       = document.getElementById('despesa-obs').value.trim();
 
   if (!insumo_id) { toast('Selecione o insumo.', 'err'); return; }
   if (qtd <= 0)   { toast('Informe a quantidade.', 'err'); return; }
-  if (valor <= 0) { toast('Informe o valor.', 'err'); return; }
+  if (vunit <= 0) { toast('Informe o valor unitário.', 'err'); return; }
   if (!data_c)    { toast('Informe a data.', 'err'); return; }
 
-  const { error } = await db.from('despesas').insert({ user_id: usuario.id, insumo_id, quantidade: qtd, valor_total: valor, data_compra: data_c, observacao: obs });
+  const valor_total = qtd * vunit;
+  const { error } = await db.from('despesas').insert({
+    user_id: usuario.id, insumo_id, quantidade: qtd,
+    valor_unitario: vunit, valor_total, data_compra: data_c, observacao: obs,
+  });
   if (error) { toast('Erro: ' + error.message, 'err'); return; }
   toast('Despesa registrada!');
   document.getElementById('modal-despesa').style.display = 'none';
@@ -532,6 +617,40 @@ async function upsertEstoque(produto_id, local_id, delta) {
 }
 
 // ── VENDAS ────────────────────────────────────────────────────────
+let _vendaProdutoCache = null; // { preco_venda, preco_promocional, qtd_min_promocional }
+
+function calcularPrecoVenda(qtd) {
+  if (!_vendaProdutoCache) return 0;
+  const { preco_venda, preco_promocional, qtd_min_promocional } = _vendaProdutoCache;
+  if (preco_promocional > 0 && qtd_min_promocional > 0 && qtd >= qtd_min_promocional) {
+    return preco_promocional * qtd;
+  }
+  return (preco_venda || 0) * qtd;
+}
+
+function atualizarPrecoVenda() {
+  const qtd = parseInt(document.getElementById('venda-qtd').value) || 0;
+  const total = calcularPrecoVenda(qtd);
+  document.getElementById('venda-valor').value = total.toFixed(2);
+
+  const info = document.getElementById('venda-preco-info');
+  if (!_vendaProdutoCache || qtd === 0) { info.style.display = 'none'; return; }
+
+  const { preco_venda, preco_promocional, qtd_min_promocional } = _vendaProdutoCache;
+  const usouPromo = preco_promocional > 0 && qtd_min_promocional > 0 && qtd >= qtd_min_promocional;
+  const faltam = preco_promocional > 0 && qtd_min_promocional > 0 && !usouPromo
+    ? qtd_min_promocional - qtd
+    : 0;
+
+  if (usouPromo) {
+    info.innerHTML = `<span style="color:var(--green)">🏷️ Preço promocional: ${R$(preco_promocional)}/un.</span>`;
+  } else if (faltam > 0) {
+    info.innerHTML = `<span style="color:var(--muted)">Preço normal: ${R$(preco_venda)}/un. · Faltam <strong>${faltam}</strong> un. para o preço promocional (${R$(preco_promocional)}/un.)</span>`;
+  } else {
+    info.innerHTML = `<span style="color:var(--muted)">Preço: ${R$(preco_venda)}/un.</span>`;
+  }
+  info.style.display = 'block';
+}
 async function carregarVendas() {
   const mes = document.getElementById('venda-filtro-mes')?.value || mesAtual();
   const ini = mes + '-01', fim = mes + '-31';
@@ -562,14 +681,32 @@ async function carregarVendas() {
 }
 
 document.getElementById('btn-nova-venda').addEventListener('click', async () => {
+  _vendaProdutoCache = null;
   await Promise.all([
     popularSelect('venda-produto', 'produtos'),
     popularSelect('venda-local', 'locais'),
   ]);
-  document.getElementById('venda-data').value = hoje();
+  document.getElementById('venda-qtd').value   = '1';
+  document.getElementById('venda-valor').value = '0';
+  document.getElementById('venda-preco-info').style.display = 'none';
+  document.getElementById('venda-data').value  = hoje();
   document.getElementById('modal-venda').style.display = 'flex';
 });
-document.getElementById('btn-cancelar-venda').addEventListener('click', () => { document.getElementById('modal-venda').style.display = 'none'; });
+
+document.getElementById('venda-produto').addEventListener('change', async (e) => {
+  const id = e.target.value;
+  if (!id) { _vendaProdutoCache = null; document.getElementById('venda-preco-info').style.display = 'none'; return; }
+  const { data } = await db.from('produtos').select('preco_venda, preco_promocional, qtd_min_promocional').eq('id', id).single();
+  _vendaProdutoCache = data;
+  atualizarPrecoVenda();
+});
+
+document.getElementById('venda-qtd').addEventListener('input', atualizarPrecoVenda);
+
+document.getElementById('btn-cancelar-venda').addEventListener('click', () => {
+  _vendaProdutoCache = null;
+  document.getElementById('modal-venda').style.display = 'none';
+});
 
 document.getElementById('btn-salvar-venda').addEventListener('click', async () => {
   const produto_id = document.getElementById('venda-produto').value;
