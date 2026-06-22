@@ -1,9 +1,10 @@
-const CACHE = 'trufas-v1';
+const CACHE = 'trufas-v2';
 const STATIC = [
   './',
   './index.html',
   './style.css',
   './app.js',
+  './config.js',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png',
