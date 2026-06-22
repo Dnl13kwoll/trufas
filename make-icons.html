@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head><title>Gerar ícones</title></head>
+<body>
+<button onclick="gerar()">Gerar e baixar ícones</button>
+<script>
+function gerar() {
+  [192, 512].forEach(size => {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    // Fundo chocolate
+    const grad = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+    grad.addColorStop(0, '#3d1a06');
+    grad.addColorStop(1, '#1e1009');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(0, 0, size, size, size * 0.2);
+    ctx.fill();
+
+    // Emoji 🍫
+    ctx.font = `${size * 0.55}px serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🍫', size / 2, size / 2);
+
+    const a = document.createElement('a');
+    a.download = `icon-${size}.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  });
+}
+</script>
+</body>
+</html>
