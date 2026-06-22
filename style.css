@@ -531,6 +531,32 @@ table.tabela th:last-child { text-align: right; }
   margin-bottom: 12px;
 }
 
+/* ── CONFIGURAÇÕES ──────────────────────────────────────────────── */
+.config-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+.config-titulo {
+  font-size: .9rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--accent2);
+}
+.parceiro-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+.parceiro-item:last-child { border-bottom: none; }
+.badge-ok   { background: rgba(16,185,129,.15); color: var(--green); border-color: rgba(16,185,129,.3); }
+.badge-pend { background: rgba(200,134,10,.15);  color: var(--accent); border-color: rgba(200,134,10,.3); }
+.btn-sm { padding: 7px 14px; font-size: .82rem; white-space: nowrap; }
+
 /* ── PREÇO INFO (vendas) ────────────────────────────────────────── */
 .preco-info {
   background: var(--surface);

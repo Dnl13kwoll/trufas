@@ -59,6 +59,8 @@
       <div class="nav-grupo">VISÃO GERAL</div>
       <button class="nav-item" data-tela="estoque">📦 Estoque</button>
       <button class="nav-item" data-tela="relatorios">📈 Relatórios</button>
+      <div class="nav-grupo">CONTA</div>
+      <button class="nav-item" data-tela="configuracoes">⚙️ Configurações</button>
     </nav>
 
     <div class="sidebar-footer">
@@ -358,6 +360,34 @@
         </div>
         <div id="painel-relatorios">
           <div class="lista-vazia">Selecione um mês acima.</div>
+        </div>
+      </section>
+
+      <!-- ── CONFIGURAÇÕES ── -->
+      <section id="tela-configuracoes" class="tela">
+        <div class="tela-header">
+          <h2 class="tela-titulo">⚙️ Configurações</h2>
+        </div>
+
+        <div class="config-card">
+          <div class="config-titulo">👤 Minha conta</div>
+          <div id="config-usuario-info" style="font-size:.9rem;color:var(--muted);margin-bottom:12px"></div>
+          <button class="btn-outline btn-sm" id="btn-logout-config">Sair da conta</button>
+        </div>
+
+        <div class="config-card">
+          <div class="config-titulo">🤝 Compartilhar com outra pessoa</div>
+          <p style="font-size:.85rem;color:var(--muted);margin-bottom:14px">
+            A pessoa convidada verá todos os seus dados ao fazer login com o e-mail abaixo.
+          </p>
+          <div class="form-row" style="align-items:flex-end">
+            <div class="form-group" style="flex:1">
+              <label>E-mail do Google</label>
+              <input type="email" id="convite-email" placeholder="exemplo@gmail.com" />
+            </div>
+            <button class="btn-primary btn-sm" id="btn-enviar-convite" style="margin-bottom:1px">Convidar</button>
+          </div>
+          <div id="lista-parceiros" style="margin-top:16px"></div>
         </div>
       </section>
 

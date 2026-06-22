@@ -28,7 +28,7 @@ const TITULOS = {
   dashboard: 'Dashboard', insumos: 'Insumos', locais: 'Locais',
   produtos: 'Produtos', despesas: 'Despesas', producao: 'Produção',
   vendas: 'Vendas', transferencias: 'Transferências',
-  estoque: 'Estoque', relatorios: 'Relatórios',
+  estoque: 'Estoque', relatorios: 'Relatórios', configuracoes: 'Configurações',
 };
 
 function navegar(tela) {
@@ -55,6 +55,7 @@ function navegar(tela) {
   if (tela === 'transferencias') carregarTransferencias();
   if (tela === 'estoque')        carregarEstoque();
   if (tela === 'relatorios')     carregarRelatorios();
+  if (tela === 'configuracoes')  carregarConfiguracoes();
 }
 
 document.querySelectorAll('.nav-item').forEach(btn => {
@@ -95,12 +96,31 @@ function mostrarLogin() {
   document.getElementById('app').style.display = 'none';
 }
 
+async function garantirPerfil(user) {
+  await db.from('perfis').upsert({
+    user_id: user.id,
+    email: user.email,
+    nome: user.user_metadata?.full_name || null,
+  }, { onConflict: 'user_id' });
+
+  // Ativar convites pendentes para este email
+  const { data: pendentes } = await db.from('parceiros')
+    .select('id')
+    .eq('email_b', user.email)
+    .eq('status', 'pendente');
+
+  for (const p of pendentes || []) {
+    await db.from('parceiros').update({ user_id_b: user.id, status: 'ativo' }).eq('id', p.id);
+  }
+}
+
 function mostrarApp(user) {
   usuario = user;
   document.getElementById('tela-login').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   const nome = user.user_metadata?.full_name || user.email || '';
   document.getElementById('usuario-nome').textContent = nome;
+  garantirPerfil(user);
 
   // Inicializar filtros com mês atual
   const mc = mesAtual();
@@ -889,6 +909,71 @@ async function carregarRelatorios() {
       </table>` : '<div class="lista-vazia">Sem despesas neste mês.</div>'}
     </div>`;
 }
+
+// ── CONFIGURAÇÕES / PARCEIROS ─────────────────────────────────────
+async function carregarConfiguracoes() {
+  const el = document.getElementById('config-usuario-info');
+  if (el) el.textContent = usuario.email;
+
+  const { data } = await db.from('parceiros')
+    .select('*')
+    .or(`user_id_a.eq.${usuario.id},user_id_b.eq.${usuario.id}`);
+
+  const lista = document.getElementById('lista-parceiros');
+  if (!data?.length) {
+    lista.innerHTML = '<div class="lista-vazia">Nenhum compartilhamento ativo.</div>';
+    return;
+  }
+
+  lista.innerHTML = data.map(p => {
+    const isOwner  = p.user_id_a === usuario.id;
+    const label    = isOwner ? p.email_b : 'você (convidado)';
+    const badge    = p.status === 'ativo'
+      ? '<span class="badge badge-ok">ativo</span>'
+      : '<span class="badge badge-pend">pendente</span>';
+    return `<div class="parceiro-item">
+      <div>
+        <div style="font-size:.88rem;font-weight:600">${label}</div>
+        <div style="font-size:.75rem;color:var(--muted)">${isOwner ? 'convidado por você' : 'convidado por ' + p.user_id_a}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${badge}
+        ${isOwner ? `<button class="btn-icon deletar" onclick="removerParceiro('${p.id}')">🗑️</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('btn-enviar-convite').addEventListener('click', async () => {
+  const email = document.getElementById('convite-email').value.trim().toLowerCase();
+  if (!email) { toast('Informe o e-mail.', 'err'); return; }
+  if (email === usuario.email) { toast('Você não pode convidar a si mesmo.', 'err'); return; }
+
+  const { error } = await db.from('parceiros').insert({
+    user_id_a: usuario.id,
+    email_b: email,
+    status: 'pendente',
+  });
+
+  if (error?.code === '23505') { toast('Este e-mail já foi convidado.', 'err'); return; }
+  if (error) { toast('Erro: ' + error.message, 'err'); return; }
+
+  document.getElementById('convite-email').value = '';
+  toast('Convite enviado! A pessoa verá os dados ao fazer login.');
+  carregarConfiguracoes();
+});
+
+document.getElementById('btn-logout-config').addEventListener('click', async () => {
+  await db.auth.signOut();
+  location.reload();
+});
+
+window.removerParceiro = async (id) => {
+  if (!confirmar('Remover este compartilhamento?')) return;
+  await db.from('parceiros').delete().eq('id', id);
+  toast('Compartilhamento removido.');
+  carregarConfiguracoes();
+};
 
 // ── Init ──────────────────────────────────────────────────────────
 initAuth();
