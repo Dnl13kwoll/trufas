@@ -1,36 +1,76 @@
 <!DOCTYPE html>
-<html>
-<head><title>Gerar ícones</title></head>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gerar Ícones PWA</title>
+  <style>
+    body { font-family: sans-serif; background: #120a06; color: #f5ede6; padding: 30px; }
+    canvas { display: block; margin: 10px 0; border-radius: 20px; }
+    .btn { background: #c8860a; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 1rem; margin: 6px 4px; }
+    .grupo { margin-bottom: 30px; }
+    h3 { color: #f5a623; }
+  </style>
+</head>
 <body>
-<button onclick="gerar()">Gerar e baixar ícones</button>
-<script>
-function gerar() {
-  [192, 512].forEach(size => {
-    const canvas = document.createElement('canvas');
-    canvas.width = canvas.height = size;
-    const ctx = canvas.getContext('2d');
+  <h2>Gerar Ícones PWA — Trufas</h2>
 
-    // Fundo chocolate
-    const grad = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
-    grad.addColorStop(0, '#3d1a06');
-    grad.addColorStop(1, '#1e1009');
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.roundRect(0, 0, size, size, size * 0.2);
-    ctx.fill();
+  <div class="grupo">
+    <h3>192 × 192</h3>
+    <canvas id="c192" width="192" height="192"></canvas>
+    <button class="btn" onclick="baixar('c192','icon-192.png')">Baixar icon-192.png</button>
+  </div>
 
-    // Emoji 🍫
-    ctx.font = `${size * 0.55}px serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('🍫', size / 2, size / 2);
+  <div class="grupo">
+    <h3>512 × 512</h3>
+    <canvas id="c512" width="512" height="512"></canvas>
+    <button class="btn" onclick="baixar('c512','icon-512.png')">Baixar icon-512.png</button>
+  </div>
 
-    const a = document.createElement('a');
-    a.download = `icon-${size}.png`;
-    a.href = canvas.toDataURL('image/png');
-    a.click();
-  });
-}
-</script>
+  <script>
+    const BG      = '#1e1009';
+    const PADDING = 0.15;
+
+    function desenhar(canvasId, size) {
+      const canvas = document.getElementById(canvasId);
+      const ctx    = canvas.getContext('2d');
+      const r      = size * 0.22;
+
+      const img  = new Image();
+      img.src    = 'icons/doce.png';
+      img.onload = () => {
+        // Fundo chocolate arredondado
+        ctx.clearRect(0, 0, size, size);
+        ctx.fillStyle = BG;
+        ctx.beginPath();
+        ctx.moveTo(r, 0);
+        ctx.lineTo(size - r, 0);
+        ctx.quadraticCurveTo(size, 0, size, r);
+        ctx.lineTo(size, size - r);
+        ctx.quadraticCurveTo(size, size, size - r, size);
+        ctx.lineTo(r, size);
+        ctx.quadraticCurveTo(0, size, 0, size - r);
+        ctx.lineTo(0, r);
+        ctx.quadraticCurveTo(0, 0, r, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        // Ícone centralizado com padding
+        const pad = size * PADDING;
+        const dim = size - pad * 2;
+        ctx.drawImage(img, pad, pad, dim, dim);
+      };
+    }
+
+    function baixar(canvasId, nome) {
+      const canvas = document.getElementById(canvasId);
+      const a = document.createElement('a');
+      a.download = nome;
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    }
+
+    desenhar('c192', 192);
+    desenhar('c512', 512);
+  </script>
 </body>
 </html>
