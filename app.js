@@ -331,11 +331,8 @@ async function carregarProdutos() {
   const { data } = await db.from('produtos').select('*').eq('user_id', usuario.id).eq('ativo', true).order('nome');
   const el = document.getElementById('lista-produtos');
   if (!data?.length) { el.innerHTML = '<div class="lista-vazia">Nenhum produto cadastrado.</div>'; return; }
-  el.innerHTML = data.map(p => {
-    const promo = p.preco_promocional > 0 && p.qtd_min_promocional > 0
-      ? `<span class="item-card-meta" style="color:var(--green)">🏷️ ${R$(p.preco_promocional)}/un. a partir de ${p.qtd_min_promocional} un.</span>`
-      : '';
-    return `<div class="item-card">
+  el.innerHTML = data.map(p => `
+    <div class="item-card">
       <div class="item-card-header">
         <span class="item-card-nome">🍬 ${p.nome}</span>
         <div class="item-card-acoes">
@@ -343,20 +340,16 @@ async function carregarProdutos() {
           <button class="btn-icon deletar" onclick="deletarProduto('${p.id}')">🗑️</button>
         </div>
       </div>
-      <span class="item-card-meta">${R$(p.preco_venda)} / un.</span>
-      ${promo}
+      <span class="item-card-meta">${R$(p.preco_venda)}/un. · 3+ un.: ${R$(PRECO_PROMO)}/un.</span>
       ${p.descricao ? `<span class="item-card-meta">${p.descricao}</span>` : ''}
-    </div>`;
-  }).join('');
+    </div>`).join('');
 }
 
 function fecharModalProduto() {
   document.getElementById('modal-produto').style.display = 'none';
-  document.getElementById('produto-nome').value        = '';
-  document.getElementById('produto-preco').value       = '0';
-  document.getElementById('produto-qtd-promo').value   = '0';
-  document.getElementById('produto-preco-promo').value = '0';
-  document.getElementById('produto-descricao').value   = '';
+  document.getElementById('produto-nome').value      = '';
+  document.getElementById('produto-preco').value     = '5.50';
+  document.getElementById('produto-descricao').value = '';
   produtoEditandoId = null;
 }
 
@@ -364,17 +357,11 @@ document.getElementById('btn-novo-produto').addEventListener('click', () => { pr
 document.getElementById('btn-cancelar-produto').addEventListener('click', fecharModalProduto);
 
 document.getElementById('btn-salvar-produto').addEventListener('click', async () => {
-  const nome       = document.getElementById('produto-nome').value.trim();
-  const preco      = parseFloat(document.getElementById('produto-preco').value) || 0;
-  const qtdPromo   = parseInt(document.getElementById('produto-qtd-promo').value)   || 0;
-  const precoPromo = parseFloat(document.getElementById('produto-preco-promo').value) || 0;
-  const descricao  = document.getElementById('produto-descricao').value.trim();
+  const nome      = document.getElementById('produto-nome').value.trim();
+  const preco     = parseFloat(document.getElementById('produto-preco').value) || 0;
+  const descricao = document.getElementById('produto-descricao').value.trim();
   if (!nome) { toast('Informe o nome do produto.', 'err'); return; }
-  const dados = {
-    nome, preco_venda: preco, descricao, user_id: usuario.id, ativo: true,
-    preco_promocional: precoPromo > 0 ? precoPromo : null,
-    qtd_min_promocional: qtdPromo > 0 ? qtdPromo : 0,
-  };
+  const dados = { nome, preco_venda: preco, descricao, user_id: usuario.id, ativo: true };
   const { error } = produtoEditandoId
     ? await db.from('produtos').update(dados).eq('id', produtoEditandoId)
     : await db.from('produtos').insert(dados);
@@ -388,11 +375,9 @@ window.editarProduto = async (id) => {
   const { data } = await db.from('produtos').select('*').eq('id', id).single();
   if (!data) return;
   produtoEditandoId = id;
-  document.getElementById('produto-nome').value        = data.nome;
-  document.getElementById('produto-preco').value       = data.preco_venda;
-  document.getElementById('produto-qtd-promo').value   = data.qtd_min_promocional || 0;
-  document.getElementById('produto-preco-promo').value = data.preco_promocional   || 0;
-  document.getElementById('produto-descricao').value   = data.descricao || '';
+  document.getElementById('produto-nome').value      = data.nome;
+  document.getElementById('produto-preco').value     = data.preco_venda;
+  document.getElementById('produto-descricao').value = data.descricao || '';
   document.getElementById('produto-modal-titulo').textContent = 'Editar Produto';
   document.getElementById('modal-produto').style.display = 'flex';
 };
@@ -617,37 +602,23 @@ async function upsertEstoque(produto_id, local_id, delta) {
 }
 
 // ── VENDAS ────────────────────────────────────────────────────────
-let _vendaProdutoCache = null; // { preco_venda, preco_promocional, qtd_min_promocional }
-
-function calcularPrecoVenda(qtd) {
-  if (!_vendaProdutoCache) return 0;
-  const { preco_venda, preco_promocional, qtd_min_promocional } = _vendaProdutoCache;
-  if (preco_promocional > 0 && qtd_min_promocional > 0 && qtd >= qtd_min_promocional) {
-    return preco_promocional * qtd;
-  }
-  return (preco_venda || 0) * qtd;
-}
+const PRECO_UNIT  = 5.50; // preço unitário padrão
+const PRECO_PROMO = 5.00; // preço a partir de 3 unidades
+const QTD_PROMO   = 3;
 
 function atualizarPrecoVenda() {
-  const qtd = parseInt(document.getElementById('venda-qtd').value) || 0;
-  const total = calcularPrecoVenda(qtd);
-  document.getElementById('venda-valor').value = total.toFixed(2);
+  const qtd   = parseInt(document.getElementById('venda-qtd').value) || 0;
+  const preco = qtd >= QTD_PROMO ? PRECO_PROMO : PRECO_UNIT;
+  document.getElementById('venda-valor').value = (preco * qtd).toFixed(2);
 
   const info = document.getElementById('venda-preco-info');
-  if (!_vendaProdutoCache || qtd === 0) { info.style.display = 'none'; return; }
+  if (qtd === 0) { info.style.display = 'none'; return; }
 
-  const { preco_venda, preco_promocional, qtd_min_promocional } = _vendaProdutoCache;
-  const usouPromo = preco_promocional > 0 && qtd_min_promocional > 0 && qtd >= qtd_min_promocional;
-  const faltam = preco_promocional > 0 && qtd_min_promocional > 0 && !usouPromo
-    ? qtd_min_promocional - qtd
-    : 0;
-
-  if (usouPromo) {
-    info.innerHTML = `<span style="color:var(--green)">🏷️ Preço promocional: ${R$(preco_promocional)}/un.</span>`;
-  } else if (faltam > 0) {
-    info.innerHTML = `<span style="color:var(--muted)">Preço normal: ${R$(preco_venda)}/un. · Faltam <strong>${faltam}</strong> un. para o preço promocional (${R$(preco_promocional)}/un.)</span>`;
+  if (qtd >= QTD_PROMO) {
+    info.innerHTML = `<span style="color:var(--green)">🏷️ ${R$(PRECO_PROMO)}/un. (promoção a partir de ${QTD_PROMO} un.)</span>`;
   } else {
-    info.innerHTML = `<span style="color:var(--muted)">Preço: ${R$(preco_venda)}/un.</span>`;
+    const faltam = QTD_PROMO - qtd;
+    info.innerHTML = `<span style="color:var(--muted)">${R$(PRECO_UNIT)}/un. · Faltam <strong>${faltam}</strong> un. para ${R$(PRECO_PROMO)}/un.</span>`;
   }
   info.style.display = 'block';
 }
@@ -681,30 +652,20 @@ async function carregarVendas() {
 }
 
 document.getElementById('btn-nova-venda').addEventListener('click', async () => {
-  _vendaProdutoCache = null;
   await Promise.all([
     popularSelect('venda-produto', 'produtos'),
     popularSelect('venda-local', 'locais'),
   ]);
   document.getElementById('venda-qtd').value   = '1';
-  document.getElementById('venda-valor').value = '0';
   document.getElementById('venda-preco-info').style.display = 'none';
   document.getElementById('venda-data').value  = hoje();
-  document.getElementById('modal-venda').style.display = 'flex';
-});
-
-document.getElementById('venda-produto').addEventListener('change', async (e) => {
-  const id = e.target.value;
-  if (!id) { _vendaProdutoCache = null; document.getElementById('venda-preco-info').style.display = 'none'; return; }
-  const { data } = await db.from('produtos').select('preco_venda, preco_promocional, qtd_min_promocional').eq('id', id).single();
-  _vendaProdutoCache = data;
   atualizarPrecoVenda();
+  document.getElementById('modal-venda').style.display = 'flex';
 });
 
 document.getElementById('venda-qtd').addEventListener('input', atualizarPrecoVenda);
 
 document.getElementById('btn-cancelar-venda').addEventListener('click', () => {
-  _vendaProdutoCache = null;
   document.getElementById('modal-venda').style.display = 'none';
 });
 
