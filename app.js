@@ -622,24 +622,35 @@ async function upsertEstoque(produto_id, local_id, delta) {
 }
 
 // ── VENDAS ────────────────────────────────────────────────────────
-const PRECO_UNIT  = 5.50; // preço unitário padrão
-const PRECO_PROMO = 5.00; // preço a partir de 3 unidades
-const QTD_PROMO   = 3;
+const PRECO_UNIT  = 5.50; // preço fora do grupo de 3
+const PRECO_PROMO = 5.00; // preço dentro do grupo de 3
+
+function calcularTotalVenda(qtd) {
+  const grupos = Math.floor(qtd / 3);
+  const resto  = qtd % 3;
+  return grupos * 3 * PRECO_PROMO + resto * PRECO_UNIT;
+}
 
 function atualizarPrecoVenda() {
-  const qtd   = parseInt(document.getElementById('venda-qtd').value) || 0;
-  const preco = qtd >= QTD_PROMO ? PRECO_PROMO : PRECO_UNIT;
-  document.getElementById('venda-valor').value = (preco * qtd).toFixed(2);
+  const qtd = parseInt(document.getElementById('venda-qtd').value) || 0;
+  document.getElementById('venda-valor').value = calcularTotalVenda(qtd).toFixed(2);
 
   const info = document.getElementById('venda-preco-info');
   if (qtd === 0) { info.style.display = 'none'; return; }
 
-  if (qtd >= QTD_PROMO) {
-    info.innerHTML = `<span style="color:var(--green)">🏷️ ${R$(PRECO_PROMO)}/un. (promoção a partir de ${QTD_PROMO} un.)</span>`;
+  const grupos = Math.floor(qtd / 3);
+  const resto  = qtd % 3;
+
+  let msg;
+  if (grupos > 0 && resto > 0) {
+    msg = `<span style="color:var(--green)">${grupos * 3} × ${R$(PRECO_PROMO)}</span> + <span style="color:var(--muted)">${resto} × ${R$(PRECO_UNIT)}</span>`;
+  } else if (grupos > 0) {
+    msg = `<span style="color:var(--green)">${qtd} × ${R$(PRECO_PROMO)} (grupos de 3)</span>`;
   } else {
-    const faltam = QTD_PROMO - qtd;
-    info.innerHTML = `<span style="color:var(--muted)">${R$(PRECO_UNIT)}/un. · Faltam <strong>${faltam}</strong> un. para ${R$(PRECO_PROMO)}/un.</span>`;
+    const faltam = 3 - qtd;
+    msg = `<span style="color:var(--muted)">${qtd} × ${R$(PRECO_UNIT)} · Faltam <strong>${faltam}</strong> un. para grupo de 3 (${R$(PRECO_PROMO)}/un.)</span>`;
   }
+  info.innerHTML = msg;
   info.style.display = 'block';
 }
 async function carregarVendas() {
