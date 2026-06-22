@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trufas — Gestão</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="config.js"></script>
+</head>
+<body>
+
+<!-- ══ LOGIN ══════════════════════════════════════════════════════ -->
+<div id="tela-login" class="tela-login">
+  <div class="login-card">
+    <div class="login-logo">🍫</div>
+    <h1 class="login-titulo">Trufas</h1>
+    <p class="login-sub">Gestão de produção e vendas</p>
+    <button id="btn-login" class="btn-google">
+      <svg width="20" height="20" viewBox="0 0 48 48" fill="none">
+        <path fill="#4285F4" d="M47.5 24.6c0-1.6-.1-3.1-.4-4.6H24v8.7h13.2c-.6 3-2.3 5.5-4.9 7.2v6h7.9c4.6-4.3 7.3-10.6 7.3-17.3z"/>
+        <path fill="#34A853" d="M24 48c6.5 0 12-2.2 16-5.9l-7.9-6c-2.2 1.5-5 2.3-8.1 2.3-6.2 0-11.5-4.2-13.4-9.9H2.5v6.2C6.5 42.5 14.7 48 24 48z"/>
+        <path fill="#FBBC05" d="M10.6 28.5c-.5-1.5-.8-3-.8-4.5s.3-3 .8-4.5v-6.2H2.5C.9 16.5 0 20.1 0 24s.9 7.5 2.5 10.7l8.1-6.2z"/>
+        <path fill="#EA4335" d="M24 9.6c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.9 2.5 30.4 0 24 0 14.7 0 6.5 5.5 2.5 13.3l8.1 6.2C12.5 13.8 17.8 9.6 24 9.6z"/>
+      </svg>
+      Entrar com Google
+    </button>
+  </div>
+</div>
+
+<!-- ══ APP ════════════════════════════════════════════════════════ -->
+<div id="app" class="app" style="display:none">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-logo">🍫</span>
+      <span class="sidebar-titulo">Trufas</span>
+      <button class="sidebar-close" id="sidebar-close">✕</button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item ativo" data-tela="dashboard">📊 Dashboard</button>
+      <div class="nav-grupo">CADASTROS</div>
+      <button class="nav-item" data-tela="insumos">🧂 Insumos</button>
+      <button class="nav-item" data-tela="locais">📍 Locais</button>
+      <button class="nav-item" data-tela="produtos">🍬 Produtos</button>
+      <div class="nav-grupo">MOVIMENTAÇÕES</div>
+      <button class="nav-item" data-tela="despesas">💸 Despesas</button>
+      <button class="nav-item" data-tela="producao">⚗️ Produção</button>
+      <button class="nav-item" data-tela="vendas">💰 Vendas</button>
+      <button class="nav-item" data-tela="transferencias">🔄 Transferências</button>
+      <div class="nav-grupo">VISÃO GERAL</div>
+      <button class="nav-item" data-tela="estoque">📦 Estoque</button>
+      <button class="nav-item" data-tela="relatorios">📈 Relatórios</button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span id="usuario-nome" class="usuario-nome"></span>
+      <button id="btn-logout" class="btn-logout">Sair</button>
+    </div>
+  </aside>
+
+  <!-- Overlay mobile -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- Conteúdo principal -->
+  <div class="main-wrap">
+    <header class="topbar">
+      <button class="btn-menu" id="btn-menu">☰</button>
+      <h1 class="topbar-titulo" id="topbar-titulo">Dashboard</h1>
+    </header>
+
+    <main class="main-content">
+
+      <!-- ── DASHBOARD ── -->
+      <section id="tela-dashboard" class="tela ativa">
+        <div class="cards-resumo" id="cards-resumo">
+          <div class="card-resumo">
+            <span class="card-icone">💰</span>
+            <span class="card-valor" id="dash-receita">R$ 0,00</span>
+            <span class="card-label">Receita (mês)</span>
+          </div>
+          <div class="card-resumo vermelho">
+            <span class="card-icone">💸</span>
+            <span class="card-valor" id="dash-despesa">R$ 0,00</span>
+            <span class="card-label">Despesas (mês)</span>
+          </div>
+          <div class="card-resumo verde">
+            <span class="card-icone">📈</span>
+            <span class="card-valor" id="dash-lucro">R$ 0,00</span>
+            <span class="card-label">Lucro (mês)</span>
+          </div>
+          <div class="card-resumo">
+            <span class="card-icone">🍬</span>
+            <span class="card-valor" id="dash-estoque">0</span>
+            <span class="card-label">Trufas em estoque</span>
+          </div>
+        </div>
+
+        <div class="dash-grid">
+          <div class="card-section">
+            <h2 class="section-titulo">📦 Estoque por local</h2>
+            <div id="dash-estoque-local" class="lista-vazia">Carregando...</div>
+          </div>
+          <div class="card-section">
+            <h2 class="section-titulo">🕐 Últimas vendas</h2>
+            <div id="dash-ultimas-vendas" class="lista-vazia">Carregando...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── INSUMOS ── -->
+      <section id="tela-insumos" class="tela">
+        <div class="tela-header">
+          <h2 class="tela-titulo">🧂 Insumos</h2>
+          <button class="btn-primary" id="btn-novo-insumo">+ Novo Insumo</button>
+        </div>
+        <div id="modal-insumo" class="modal" style="display:none">
+          <div class="modal-card">
+            <h3 class="modal-titulo" id="insumo-modal-titulo">Novo Insumo</h3>
+            <div class="form-group"><label>Nome</label><input type="text" id="insumo-nome" placeholder="Ex.: Chocolate ao leite" /></div>
+            <div class="form-row">
+              <div class="form-group"><label>Unidade</label>
+                <select id="insumo-unidade">
+                  <option value="unidade">Unidade</option>
+                  <option value="kg">kg</option>
+                  <option value="g">g</option>
+                  <option value="L">L</option>
+                  <option value="mL">mL</option>
+                  <option value="cx">Caixa</option>
+                  <option value="pct">Pacote</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Estoque mínimo</label><input type="number" id="insumo-minimo" value="0" min="0" step="0.001" /></div>
+            </div>
+            <div class="modal-acoes">
+              <button class="btn-outline" id="btn-cancelar-insumo">Cancelar</button>
+              <button class="btn-primary" id="btn-salvar-insumo">Salvar</button>
+            </div>
+          </div>
+        </div>
+        <div id="lista-insumos" class="lista-cards">
+          <div class="lista-vazia">Nenhum insumo cadastrado.</div>
+        </div>
+      </section>
+
+      <!-- ── LOCAIS ── -->
+      <section id="tela-locais" class="tela">
+        <div class="tela-header">
+          <h2 class="tela-titulo">📍 Locais</h2>
+          <button class="btn-primary" id="btn-novo-local">+ Novo Local</button>
+        </div>
+        <div id="modal-local" class="modal" style="display:none">
+          <div class="modal-card">
+            <h3 class="modal-titulo" id="local-modal-titulo">Novo Local</h3>
+            <div class="form-group"><label>Nome</label><input type="text" id="local-nome" placeholder="Ex.: Geladeira, Ponto de Venda" /></div>
+            <div class="form-group"><label>Descrição (opcional)</label><input type="text" id="local-descricao" placeholder="Detalhe do local" /></div>
+            <div class="modal-acoes">
+              <button class="btn-outline" id="btn-cancelar-local">Cancelar</button>
+              <button class="btn-primary" id="btn-salvar-local">Salvar</button>
+            </div>
+          </div>
+        </div>
+        <div id="lista-locais" class="lista-cards">
+          <div class="lista-vazia">Nenhum local cadastrado.</div>
+        </div>
+      </section>
+
+      <!-- ── PRODUTOS ── -->
+      <section id="tela-produtos" class="tela">
+        <div class="tela-header">
+          <h2 class="tela-titulo">🍬 Produtos</h2>
+          <button class="btn-primary" id="btn-novo-produto">+ Novo Produto</button>
+        </div>
+        <div id="modal-produto" class="modal" style="display:none">
+          <div class="modal-card">
+            <h3 class="modal-titulo" id="produto-modal-titulo">Novo Produto</h3>
+            <div class="form-group"><label>Nome / Sabor</label><input type="text" id="produto-nome" placeholder="Ex.: Trufa de Maracujá" /></div>
+            <div class="form-row">
+              <div class="form-group"><label>Preço de venda (R$)</label><input type="number" id="produto-preco" value="0" min="0" step="0.01" /></div>
+            </div>
+            <div class="form-group"><label>Descrição (opcional)</label><input type="text" id="produto-descricao" placeholder="Detalhes do produto" /></div>
+            <div class="modal-acoes">
+              <button class="btn-outline" id="btn-cancelar-produto">Cancelar</button>
+              <button class="btn-primary" id="btn-salvar-produto">Salvar</button>
+            </div>
+          </div>
+        </div>
+        <div id="lista-produtos" class="lista-cards">
+          <div class="lista-vazia">Nenhum produto cadastrado.</div>
+        </div>
+      </section>
+
+      <!-- ── DESPESAS ── -->
+      <section id="tela-despesas" class="tela">
+        <div class="tela-header">
+          <h2 class="tela-titulo">💸 Despesas</h2>
+          <button class="btn-primary" id="btn-nova-despesa">+ Nova Despesa</button>
+        </div>
+        <div id="modal-despesa" class="modal" style="display:none">
+          <div class="modal-card">
+            <h3 class="modal-titulo">Registrar Despesa</h3>
+            <div class="form-group"><label>Insumo</label>
+              <select id="despesa-insumo"><option value="">Selecione...</option></select>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Quantidade</label><input type="number" id="despesa-qtd" value="1" min="0.001" step="0.001" /></div>
+              <div class="form-group"><label>Valor Total (R$)</label><input type="number" id="despesa-valor" value="0" min="0" step="0.01" /></div>
+            </div>
+            <div class="form-group"><label>Data da compra</label><input type="date" id="despesa-data" /></div>
+            <div class="form-group"><label>Observação (opcional)</label><input type="text" id="despesa-obs" placeholder="Onde comprou, etc." /></div>
+            <div class="modal-acoes">
+              <button class="btn-outline" id="btn-cancelar-despesa">Cancelar</button>
+              <button class="btn-primary" id="btn-salvar-despesa">Salvar</button>
+            </div>
+          </div>
+        </div>
+        <div class="filtros-barra">
+          <input type="month" id="despesa-filtro-mes" class="input-filtro" />
+        </div>
+        <div id="lista-despesas" class="lista-tabela">
+          <div class="lista-vazia">Nenhuma despesa registrada.</div>
+        </div>
+      </section>
+
+      <!-- ── PRODUÇÃO ── -->
+      <section id="tela-producao" class="tela">
+        <div class="tela-header">
+          <h2 class="tela-titulo">⚗️ Produção</h2>
+          <button class="btn-primary" id="btn-nova-producao">+ Registrar Produção</button>
+        </div>
+        <div id="modal-producao" class="modal" style="display:none">
+          <div class="modal-card">
+            <h3 class="modal-titulo">Registrar Produção</h3>
+            <div class="form-group"><label>Produto</label>
+              <select id="producao-produto"><option value="">Selecione...</option></select>
+            </div>
+            <div class="form-group"><label>Local de armazenamento</label>
+              <select id="producao-local"><option value="">Selecione...</option></select>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Quantidade produzida</label><input type="number" id="producao-qtd" value="1" min="1" /></div>
+              <div class="form-group"><label>Custo estimado (R$)</label><input type="number" id="producao-custo" value="0" min="0" step="0.01" /></div>
+            </div>
+            <div class="form-group"><label>Data</label><input type="date" id="producao-data" /></div>
+            <div class="form-group"><label>Observação</label><input type="text" id="producao-obs" placeholder="Detalhes da produção" /></div>
+            <div class="modal-acoes">
+              <button class="btn-outline" id="btn-cancelar-producao">Cancelar</button>
+              <button class="btn-primary" id="btn-salvar-producao">Salvar</button>
+            </div>
+          </div>
+        </div>
+        <div id="lista-producoes" class="lista-tabela">
+          <div class="lista-vazia">Nenhuma produção registrada.</div>
+        </div>
+      </section>
+
+      <!-- ── VENDAS ── -->
+      <section id="tela-vendas" class="tela">
+        <div class="tela-header">
+          <h2 class="tela-titulo">💰 Vendas</h2>
+          <button class="btn-primary" id="btn-nova-venda">+ Registrar Venda</button>
+        </div>
+        <div id="modal-venda" class="modal" style="display:none">
+          <div class="modal-card">
+            <h3 class="modal-titulo">Registrar Venda</h3>
+            <div class="form-group"><label>Produto</label>
+              <select id="venda-produto"><option value="">Selecione...</option></select>
+            </div>
+            <div class="form-group"><label>Local (de onde saiu)</label>
+              <select id="venda-local"><option value="">Selecione...</option></select>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Quantidade</label><input type="number" id="venda-qtd" value="1" min="1" /></div>
+              <div class="form-group"><label>Valor Total (R$)</label><input type="number" id="venda-valor" value="0" min="0" step="0.01" /></div>
+            </div>
+            <div class="form-group"><label>Data</label><input type="date" id="venda-data" /></div>
+            <div class="form-group"><label>Observação</label><input type="text" id="venda-obs" placeholder="Cliente, evento, etc." /></div>
+            <div class="modal-acoes">
+              <button class="btn-outline" id="btn-cancelar-venda">Cancelar</button>
+              <button class="btn-primary" id="btn-salvar-venda">Salvar</button>
+            </div>
+          </div>
+        </div>
+        <div class="filtros-barra">
+          <input type="month" id="venda-filtro-mes" class="input-filtro" />
+        </div>
+        <div id="lista-vendas" class="lista-tabela">
+          <div class="lista-vazia">Nenhuma venda registrada.</div>
+        </div>
+      </section>
+
+      <!-- ── TRANSFERÊNCIAS ── -->
+      <section id="tela-transferencias" class="tela">
+        <div class="tela-header">
+          <h2 class="tela-titulo">🔄 Transferências</h2>
+          <button class="btn-primary" id="btn-nova-transferencia">+ Nova Transferência</button>
+        </div>
+        <div id="modal-transferencia" class="modal" style="display:none">
+          <div class="modal-card">
+            <h3 class="modal-titulo">Transferir Estoque</h3>
+            <div class="form-group"><label>Produto</label>
+              <select id="transf-produto"><option value="">Selecione...</option></select>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>De (origem)</label>
+                <select id="transf-origem"><option value="">Selecione...</option></select>
+              </div>
+              <div class="form-group"><label>Para (destino)</label>
+                <select id="transf-destino"><option value="">Selecione...</option></select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>Quantidade</label><input type="number" id="transf-qtd" value="1" min="1" /></div>
+              <div class="form-group"><label>Data</label><input type="date" id="transf-data" /></div>
+            </div>
+            <div id="transf-aviso" class="aviso-estoque" style="display:none"></div>
+            <div class="modal-acoes">
+              <button class="btn-outline" id="btn-cancelar-transf">Cancelar</button>
+              <button class="btn-primary" id="btn-salvar-transf">Transferir</button>
+            </div>
+          </div>
+        </div>
+        <div id="lista-transferencias" class="lista-tabela">
+          <div class="lista-vazia">Nenhuma transferência registrada.</div>
+        </div>
+      </section>
+
+      <!-- ── ESTOQUE ── -->
+      <section id="tela-estoque" class="tela">
+        <div class="tela-header">
+          <h2 class="tela-titulo">📦 Estoque por Local</h2>
+          <button class="btn-outline" id="btn-atualizar-estoque">🔄 Atualizar</button>
+        </div>
+        <div id="painel-estoque">
+          <div class="lista-vazia">Carregando...</div>
+        </div>
+      </section>
+
+      <!-- ── RELATÓRIOS ── -->
+      <section id="tela-relatorios" class="tela">
+        <div class="tela-header">
+          <h2 class="tela-titulo">📈 Relatórios</h2>
+          <input type="month" id="rel-mes" class="input-filtro" />
+        </div>
+        <div id="painel-relatorios">
+          <div class="lista-vazia">Selecione um mês acima.</div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<div id="toast" class="toast" style="display:none"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
