@@ -1,13 +1,13 @@
-'use strict';
+﻿'use strict';
 
-// ── Supabase ──────────────────────────────────────────────────────
+// â”€â”€ Supabase â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ── Estado ────────────────────────────────────────────────────────
+// â”€â”€ Estado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let usuario = null;
 
-// ── Utilitários ───────────────────────────────────────────────────
+// â”€â”€ UtilitÃ¡rios â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function R$(v) { return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function hoje() { return new Date().toISOString().slice(0, 10); }
 function mesAtual() { return new Date().toISOString().slice(0, 7); }
@@ -23,12 +23,12 @@ function toast(msg, tipo = 'ok') {
 
 function confirmar(msg) { return confirm(msg); }
 
-// ── Navegação ─────────────────────────────────────────────────────
+// â”€â”€ NavegaÃ§Ã£o â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const TITULOS = {
   dashboard: 'Dashboard', insumos: 'Insumos', locais: 'Locais',
-  produtos: 'Produtos', despesas: 'Despesas', producao: 'Produção',
-  vendas: 'Vendas', transferencias: 'Transferências',
-  estoque: 'Estoque', relatorios: 'Relatórios', configuracoes: 'Configurações',
+  produtos: 'Produtos', despesas: 'Despesas', producao: 'ProduÃ§Ã£o',
+  vendas: 'Vendas', transferencias: 'TransferÃªncias',
+  estoque: 'Estoque', relatorios: 'RelatÃ³rios', configuracoes: 'ConfiguraÃ§Ãµes',
 };
 
 function navegar(tela) {
@@ -62,7 +62,7 @@ document.querySelectorAll('.nav-item').forEach(btn => {
   btn.addEventListener('click', () => navegar(btn.dataset.tela));
 });
 
-// ── Sidebar mobile ────────────────────────────────────────────────
+// â”€â”€ Sidebar mobile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function abrirSidebar()  { document.getElementById('sidebar').classList.add('aberta'); document.getElementById('sidebar-overlay').classList.add('visivel'); }
 function fecharSidebar() { document.getElementById('sidebar').classList.remove('aberta'); document.getElementById('sidebar-overlay').classList.remove('visivel'); }
 
@@ -70,7 +70,7 @@ document.getElementById('btn-menu').addEventListener('click', abrirSidebar);
 document.getElementById('sidebar-close').addEventListener('click', fecharSidebar);
 document.getElementById('sidebar-overlay').addEventListener('click', fecharSidebar);
 
-// ── Auth ──────────────────────────────────────────────────────────
+// â”€â”€ Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 document.getElementById('btn-login').addEventListener('click', () => {
   db.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } });
 });
@@ -122,7 +122,7 @@ function mostrarApp(user) {
   document.getElementById('usuario-nome').textContent = nome;
   garantirPerfil(user);
 
-  // Inicializar filtros com mês atual
+  // Inicializar filtros com mÃªs atual
   const mc = mesAtual();
   const dfm = document.getElementById('despesa-filtro-mes');
   const vfm = document.getElementById('venda-filtro-mes');
@@ -134,25 +134,25 @@ function mostrarApp(user) {
   navegar('dashboard');
 }
 
-// ── Helpers de selects ────────────────────────────────────────────
+// â”€â”€ Helpers de selects â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function popularSelect(id, tabela, placeholder = 'Selecione...') {
   const sel = document.getElementById(id);
   if (!sel) return;
-  const { data } = await db.from(tabela).select('id, nome').eq('user_id', usuario.id).eq('ativo', true).order('nome');
+  const { data } = await db.from(tabela).select('id, nome').eq('ativo', true).order('nome');
   sel.innerHTML = `<option value="">${placeholder}</option>` +
     (data || []).map(r => `<option value="${r.id}">${r.nome}</option>`).join('');
 }
 
-// ── DASHBOARD ─────────────────────────────────────────────────────
+// â”€â”€ DASHBOARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function carregarDashboard() {
   const mc = mesAtual();
   const ini = mc + '-01';
   const fim = mc + '-31';
 
   const [{ data: vendas }, { data: despesas }, { data: estoque }] = await Promise.all([
-    db.from('vendas').select('valor_total').eq('user_id', usuario.id).gte('data_venda', ini).lte('data_venda', fim),
-    db.from('despesas').select('valor_total').eq('user_id', usuario.id).gte('data_compra', ini).lte('data_compra', fim),
-    db.from('estoque_local').select('quantidade').eq('user_id', usuario.id),
+    db.from('vendas').select('valor_total').gte('data_venda', ini).lte('data_venda', fim),
+    db.from('despesas').select('valor_total').gte('data_compra', ini).lte('data_compra', fim),
+    db.from('estoque_local').select('quantidade'),
   ]);
 
   const receita = (vendas  || []).reduce((s, v) => s + parseFloat(v.valor_total || 0), 0);
@@ -169,8 +169,7 @@ async function carregarDashboard() {
   const { data: estoqueDetalhado } = await db
     .from('estoque_local')
     .select('quantidade, produtos(nome), locais(nome)')
-    .eq('user_id', usuario.id)
-    .gt('quantidade', 0);
+        .gt('quantidade', 0);
 
   const porLocal = {};
   (estoqueDetalhado || []).forEach(e => {
@@ -192,12 +191,11 @@ async function carregarDashboard() {
     ).join('');
   }
 
-  // Últimas vendas
+  // Ãšltimas vendas
   const { data: ult } = await db
     .from('vendas')
     .select('data_venda, valor_total, quantidade, produtos(nome)')
-    .eq('user_id', usuario.id)
-    .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false })
     .limit(5);
 
   const elUlt = document.getElementById('dash-ultimas-vendas');
@@ -208,18 +206,18 @@ async function carregarDashboard() {
       <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05)">
         <div>
           <div style="font-size:.85rem;font-weight:700">${v.produtos?.nome || '?'}</div>
-          <div style="font-size:.75rem;color:var(--muted)">${v.data_venda} · ${v.quantidade} un.</div>
+          <div style="font-size:.75rem;color:var(--muted)">${v.data_venda} Â· ${v.quantidade} un.</div>
         </div>
         <span style="font-weight:700;color:var(--green)">${R$(v.valor_total)}</span>
       </div>`).join('');
   }
 }
 
-// ── INSUMOS ───────────────────────────────────────────────────────
+// â”€â”€ INSUMOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let insumoEditandoId = null;
 
 async function carregarInsumos() {
-  const { data } = await db.from('insumos').select('*').eq('user_id', usuario.id).eq('ativo', true).order('nome');
+  const { data } = await db.from('insumos').select('*').eq('ativo', true).order('nome');
   const el = document.getElementById('lista-insumos');
   if (!data?.length) { el.innerHTML = '<div class="lista-vazia">Nenhum insumo cadastrado.</div>'; return; }
   el.innerHTML = data.map(i => `
@@ -227,11 +225,11 @@ async function carregarInsumos() {
       <div class="item-card-header">
         <span class="item-card-nome">${i.nome}</span>
         <div class="item-card-acoes">
-          <button class="btn-icon editar" onclick="editarInsumo('${i.id}')">✏️</button>
-          <button class="btn-icon deletar" onclick="deletarInsumo('${i.id}')">🗑️</button>
+          <button class="btn-icon editar" onclick="editarInsumo('${i.id}')">âœï¸</button>
+          <button class="btn-icon deletar" onclick="deletarInsumo('${i.id}')">ðŸ—‘ï¸</button>
         </div>
       </div>
-      <span class="item-card-meta">${i.unidade}${i.estoque_minimo > 0 ? ' · mín: ' + i.estoque_minimo : ''}</span>
+      <span class="item-card-meta">${i.unidade}${i.estoque_minimo > 0 ? ' Â· mÃ­n: ' + i.estoque_minimo : ''}</span>
     </div>`).join('');
 }
 
@@ -284,20 +282,20 @@ window.deletarInsumo = async (id) => {
   carregarInsumos();
 };
 
-// ── LOCAIS ────────────────────────────────────────────────────────
+// â”€â”€ LOCAIS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let localEditandoId = null;
 
 async function carregarLocais() {
-  const { data } = await db.from('locais').select('*').eq('user_id', usuario.id).eq('ativo', true).order('nome');
+  const { data } = await db.from('locais').select('*').eq('ativo', true).order('nome');
   const el = document.getElementById('lista-locais');
   if (!data?.length) { el.innerHTML = '<div class="lista-vazia">Nenhum local cadastrado.</div>'; return; }
   el.innerHTML = data.map(l => `
     <div class="item-card">
       <div class="item-card-header">
-        <span class="item-card-nome">📍 ${l.nome}</span>
+        <span class="item-card-nome">ðŸ“ ${l.nome}</span>
         <div class="item-card-acoes">
-          <button class="btn-icon editar" onclick="editarLocal('${l.id}')">✏️</button>
-          <button class="btn-icon deletar" onclick="deletarLocal('${l.id}')">🗑️</button>
+          <button class="btn-icon editar" onclick="editarLocal('${l.id}')">âœï¸</button>
+          <button class="btn-icon deletar" onclick="deletarLocal('${l.id}')">ðŸ—‘ï¸</button>
         </div>
       </div>
       ${l.descricao ? `<span class="item-card-meta">${l.descricao}</span>` : ''}
@@ -344,23 +342,23 @@ window.deletarLocal = async (id) => {
   carregarLocais();
 };
 
-// ── PRODUTOS ──────────────────────────────────────────────────────
+// â”€â”€ PRODUTOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let produtoEditandoId = null;
 
 async function carregarProdutos() {
-  const { data } = await db.from('produtos').select('*').eq('user_id', usuario.id).eq('ativo', true).order('nome');
+  const { data } = await db.from('produtos').select('*').eq('ativo', true).order('nome');
   const el = document.getElementById('lista-produtos');
   if (!data?.length) { el.innerHTML = '<div class="lista-vazia">Nenhum produto cadastrado.</div>'; return; }
   el.innerHTML = data.map(p => `
     <div class="item-card">
       <div class="item-card-header">
-        <span class="item-card-nome">🍬 ${p.nome}</span>
+        <span class="item-card-nome">ðŸ¬ ${p.nome}</span>
         <div class="item-card-acoes">
-          <button class="btn-icon editar" onclick="editarProduto('${p.id}')">✏️</button>
-          <button class="btn-icon deletar" onclick="deletarProduto('${p.id}')">🗑️</button>
+          <button class="btn-icon editar" onclick="editarProduto('${p.id}')">âœï¸</button>
+          <button class="btn-icon deletar" onclick="deletarProduto('${p.id}')">ðŸ—‘ï¸</button>
         </div>
       </div>
-      <span class="item-card-meta">${R$(p.preco_venda)}/un. · 3+ un.: ${R$(PRECO_PROMO)}/un.</span>
+      <span class="item-card-meta">${R$(p.preco_venda)}/un. Â· 3+ un.: ${R$(PRECO_PROMO)}/un.</span>
       ${p.descricao ? `<span class="item-card-meta">${p.descricao}</span>` : ''}
     </div>`).join('');
 }
@@ -408,7 +406,7 @@ window.deletarProduto = async (id) => {
   carregarProdutos();
 };
 
-// ── DESPESAS ──────────────────────────────────────────────────────
+// â”€â”€ DESPESAS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function carregarDespesas() {
   const mes = document.getElementById('despesa-filtro-mes')?.value || mesAtual();
   const ini = mes + '-01', fim = mes + '-31';
@@ -416,43 +414,41 @@ async function carregarDespesas() {
   const [{ data }, { data: historico }] = await Promise.all([
     db.from('despesas')
       .select('*, insumos(nome, unidade)')
-      .eq('user_id', usuario.id)
-      .gte('data_compra', ini).lte('data_compra', fim)
+            .gte('data_compra', ini).lte('data_compra', fim)
       .order('data_compra', { ascending: false }),
     db.from('despesas')
       .select('data_compra, valor_unitario, quantidade, valor_total, insumos(id, nome, unidade)')
-      .eq('user_id', usuario.id)
-      .order('data_compra', { ascending: true })
+            .order('data_compra', { ascending: true })
       .limit(200),
   ]);
 
   const el = document.getElementById('lista-despesas');
 
-  // ── Tabela do mês ──────────────────────────────────────────────
+  // â”€â”€ Tabela do mÃªs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let html = '';
   if (!data?.length) {
-    html += '<div class="lista-vazia">Nenhuma despesa neste mês.</div>';
+    html += '<div class="lista-vazia">Nenhuma despesa neste mÃªs.</div>';
   } else {
     const total = data.reduce((s, d) => s + parseFloat(d.valor_total || 0), 0);
     html += `
-      <div style="margin-bottom:10px;font-size:.85rem;color:var(--muted)">Total do mês: <strong style="color:var(--red)">${R$(total)}</strong></div>
+      <div style="margin-bottom:10px;font-size:.85rem;color:var(--muted)">Total do mÃªs: <strong style="color:var(--red)">${R$(total)}</strong></div>
       <table class="tabela">
         <thead><tr><th>Data</th><th>Insumo</th><th>Qtd</th><th>Valor unit.</th><th>Total</th><th></th></tr></thead>
         <tbody>${data.map(d => {
           const pu = parseFloat(d.valor_unitario) || (d.quantidade > 0 ? d.valor_total / d.quantidade : 0);
           return `<tr>
             <td>${d.data_compra}</td>
-            <td>${d.insumos?.nome || '—'}</td>
+            <td>${d.insumos?.nome || 'â€”'}</td>
             <td>${d.quantidade} ${d.insumos?.unidade || ''}</td>
             <td style="color:var(--accent)">${R$(pu)}/${d.insumos?.unidade || 'un'}</td>
             <td style="color:var(--red)">${R$(d.valor_total)}</td>
-            <td><button class="btn-icon deletar" onclick="deletarDespesa('${d.id}')">🗑️</button></td>
+            <td><button class="btn-icon deletar" onclick="deletarDespesa('${d.id}')">ðŸ—‘ï¸</button></td>
           </tr>`;
         }).join('')}</tbody>
       </table>`;
   }
 
-  // ── Histórico de preços por insumo ──────────────────────────────
+  // â”€â”€ HistÃ³rico de preÃ§os por insumo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (historico?.length) {
     const porInsumo = {};
     historico.forEach(d => {
@@ -468,15 +464,15 @@ async function carregarDespesas() {
     const insumosComHistorico = Object.values(porInsumo).filter(i => i.compras.length > 0);
     if (insumosComHistorico.length) {
       html += `<div class="rel-section" style="margin-top:24px">
-        <div class="rel-section-titulo">Histórico de Preços por Insumo</div>
+        <div class="rel-section-titulo">HistÃ³rico de PreÃ§os por Insumo</div>
         ${insumosComHistorico.map(({ nome, un, compras }) => {
           const ultimo = compras[compras.length - 1].pu;
           const anterior = compras.length > 1 ? compras[compras.length - 2].pu : null;
           const tendencia = anterior === null ? '' : ultimo > anterior
-            ? '<span style="color:var(--red);font-size:.8rem"> ▲</span>'
+            ? '<span style="color:var(--red);font-size:.8rem"> â–²</span>'
             : ultimo < anterior
-              ? '<span style="color:var(--green);font-size:.8rem"> ▼</span>'
-              : '<span style="color:var(--muted);font-size:.8rem"> –</span>';
+              ? '<span style="color:var(--green);font-size:.8rem"> â–¼</span>'
+              : '<span style="color:var(--muted);font-size:.8rem"> â€“</span>';
           const linhas = compras.slice(-6).map((c, i, arr) => {
             const prev = i > 0 ? arr[i-1].pu : null;
             const cor  = prev === null ? '' : c.pu > prev ? 'color:var(--red)' : c.pu < prev ? 'color:var(--green)' : 'color:var(--muted)';
@@ -484,7 +480,7 @@ async function carregarDespesas() {
           }).join('');
           return `<div class="historico-insumo-card">
             <div class="historico-insumo-titulo">${nome}${tendencia}</div>
-            <div style="font-size:.8rem;color:var(--muted);margin-bottom:6px">Último: <strong style="color:var(--accent)">${R$(ultimo)}/${un}</strong></div>
+            <div style="font-size:.8rem;color:var(--muted);margin-bottom:6px">Ãšltimo: <strong style="color:var(--accent)">${R$(ultimo)}/${un}</strong></div>
             <table class="tabela" style="margin:0"><tbody>${linhas}</tbody></table>
           </div>`;
         }).join('')}
@@ -523,7 +519,7 @@ document.getElementById('btn-salvar-despesa').addEventListener('click', async ()
 
   if (!insumo_id) { toast('Selecione o insumo.', 'err'); return; }
   if (qtd <= 0)   { toast('Informe a quantidade.', 'err'); return; }
-  if (vunit <= 0) { toast('Informe o valor unitário.', 'err'); return; }
+  if (vunit <= 0) { toast('Informe o valor unitÃ¡rio.', 'err'); return; }
   if (!data_c)    { toast('Informe a data.', 'err'); return; }
 
   const valor_total = qtd * vunit;
@@ -543,25 +539,24 @@ window.deletarDespesa = async (id) => {
   carregarDespesas();
 };
 
-// ── PRODUÇÃO ──────────────────────────────────────────────────────
+// â”€â”€ PRODUÃ‡ÃƒO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function carregarProducoes() {
   const { data } = await db.from('producoes')
     .select('*, produtos(nome), locais(nome)')
-    .eq('user_id', usuario.id)
-    .order('data_producao', { ascending: false })
+        .order('data_producao', { ascending: false })
     .limit(50);
 
   const el = document.getElementById('lista-producoes');
-  if (!data?.length) { el.innerHTML = '<div class="lista-vazia">Nenhuma produção registrada.</div>'; return; }
+  if (!data?.length) { el.innerHTML = '<div class="lista-vazia">Nenhuma produÃ§Ã£o registrada.</div>'; return; }
   el.innerHTML = `<table class="tabela">
     <thead><tr><th>Data</th><th>Produto</th><th>Local</th><th>Qtd</th><th>Custo</th><th></th></tr></thead>
     <tbody>${data.map(p => `<tr>
       <td>${p.data_producao}</td>
-      <td>${p.produtos?.nome || '—'}</td>
-      <td>${p.locais?.nome   || '—'}</td>
+      <td>${p.produtos?.nome || 'â€”'}</td>
+      <td>${p.locais?.nome   || 'â€”'}</td>
       <td>${p.quantidade}</td>
-      <td>${p.custo_estimado > 0 ? R$(p.custo_estimado) : '—'}</td>
-      <td><button class="btn-icon deletar" onclick="deletarProducao('${p.id}', '${p.produto_id}', '${p.local_id}', ${p.quantidade})">🗑️</button></td>
+      <td>${p.custo_estimado > 0 ? R$(p.custo_estimado) : 'â€”'}</td>
+      <td><button class="btn-icon deletar" onclick="deletarProducao('${p.id}', '${p.produto_id}', '${p.local_id}', ${p.quantidade})">ðŸ—‘ï¸</button></td>
     </tr>`).join('')}</tbody>
   </table>`;
 }
@@ -594,19 +589,19 @@ document.getElementById('btn-salvar-producao').addEventListener('click', async (
   // Atualizar estoque
   await upsertEstoque(produto_id, local_id, qtd);
 
-  toast('Produção registrada!');
+  toast('ProduÃ§Ã£o registrada!');
   document.getElementById('modal-producao').style.display = 'none';
   carregarProducoes();
 });
 
 window.deletarProducao = async (id, produto_id, local_id, qtd) => {
-  if (!confirmar('Deletar esta produção? O estoque será ajustado.')) return;
+  if (!confirmar('Deletar esta produÃ§Ã£o? O estoque serÃ¡ ajustado.')) return;
   await db.from('producoes').delete().eq('id', id);
   await upsertEstoque(produto_id, local_id, -qtd);
   carregarProducoes();
 };
 
-// ── ESTOQUE helper ────────────────────────────────────────────────
+// â”€â”€ ESTOQUE helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function upsertEstoque(produto_id, local_id, delta) {
   const { data: ex } = await db.from('estoque_local')
     .select('id, quantidade')
@@ -621,9 +616,9 @@ async function upsertEstoque(produto_id, local_id, delta) {
   }
 }
 
-// ── VENDAS ────────────────────────────────────────────────────────
-const PRECO_UNIT  = 5.50; // preço unitário padrão
-const PRECO_PROMO = 5.00; // preço a partir de 3 unidades
+// â”€â”€ VENDAS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const PRECO_UNIT  = 5.50; // preÃ§o unitÃ¡rio padrÃ£o
+const PRECO_PROMO = 5.00; // preÃ§o a partir de 3 unidades
 const QTD_PROMO   = 3;
 
 function atualizarPrecoVenda() {
@@ -635,10 +630,10 @@ function atualizarPrecoVenda() {
   if (qtd === 0) { info.style.display = 'none'; return; }
 
   if (qtd >= QTD_PROMO) {
-    info.innerHTML = `<span style="color:var(--green)">🏷️ ${R$(PRECO_PROMO)}/un. (promoção a partir de ${QTD_PROMO} un.)</span>`;
+    info.innerHTML = `<span style="color:var(--green)">ðŸ·ï¸ ${R$(PRECO_PROMO)}/un. (promoÃ§Ã£o a partir de ${QTD_PROMO} un.)</span>`;
   } else {
     const faltam = QTD_PROMO - qtd;
-    info.innerHTML = `<span style="color:var(--muted)">${R$(PRECO_UNIT)}/un. · Faltam <strong>${faltam}</strong> un. para ${R$(PRECO_PROMO)}/un.</span>`;
+    info.innerHTML = `<span style="color:var(--muted)">${R$(PRECO_UNIT)}/un. Â· Faltam <strong>${faltam}</strong> un. para ${R$(PRECO_PROMO)}/un.</span>`;
   }
   info.style.display = 'block';
 }
@@ -648,12 +643,11 @@ async function carregarVendas() {
 
   const { data } = await db.from('vendas')
     .select('*, produtos(nome), locais(nome)')
-    .eq('user_id', usuario.id)
-    .gte('data_venda', ini).lte('data_venda', fim)
+        .gte('data_venda', ini).lte('data_venda', fim)
     .order('data_venda', { ascending: false });
 
   const el = document.getElementById('lista-vendas');
-  if (!data?.length) { el.innerHTML = '<div class="lista-vazia">Nenhuma venda neste mês.</div>'; return; }
+  if (!data?.length) { el.innerHTML = '<div class="lista-vazia">Nenhuma venda neste mÃªs.</div>'; return; }
 
   const total = data.reduce((s, v) => s + parseFloat(v.valor_total || 0), 0);
   el.innerHTML = `
@@ -662,11 +656,11 @@ async function carregarVendas() {
       <thead><tr><th>Data</th><th>Produto</th><th>Local</th><th>Qtd</th><th>Valor</th><th></th></tr></thead>
       <tbody>${data.map(v => `<tr>
         <td>${v.data_venda}</td>
-        <td>${v.produtos?.nome || '—'}</td>
-        <td>${v.locais?.nome   || '—'}</td>
+        <td>${v.produtos?.nome || 'â€”'}</td>
+        <td>${v.locais?.nome   || 'â€”'}</td>
         <td>${v.quantidade}</td>
         <td style="color:var(--green)">${R$(v.valor_total)}</td>
-        <td><button class="btn-icon deletar" onclick="deletarVenda('${v.id}', '${v.produto_id}', '${v.local_id}', ${v.quantidade})">🗑️</button></td>
+        <td><button class="btn-icon deletar" onclick="deletarVenda('${v.id}', '${v.produto_id}', '${v.local_id}', ${v.quantidade})">ðŸ—‘ï¸</button></td>
       </tr>`).join('')}</tbody>
     </table>`;
 }
@@ -705,7 +699,7 @@ document.getElementById('btn-salvar-venda').addEventListener('click', async () =
   // Verificar estoque
   const { data: es } = await db.from('estoque_local').select('quantidade').eq('produto_id', produto_id).eq('local_id', local_id).maybeSingle();
   if (!es || (es.quantidade || 0) < qtd) {
-    toast(`Estoque insuficiente neste local (disponível: ${es?.quantidade || 0}).`, 'err'); return;
+    toast(`Estoque insuficiente neste local (disponÃ­vel: ${es?.quantidade || 0}).`, 'err'); return;
   }
 
   const { error } = await db.from('vendas').insert({ user_id: usuario.id, produto_id, local_id, quantidade: qtd, valor_total: valor, data_venda: data_v, observacao: obs });
@@ -718,31 +712,30 @@ document.getElementById('btn-salvar-venda').addEventListener('click', async () =
 });
 
 window.deletarVenda = async (id, produto_id, local_id, qtd) => {
-  if (!confirmar('Deletar esta venda? O estoque será revertido.')) return;
+  if (!confirmar('Deletar esta venda? O estoque serÃ¡ revertido.')) return;
   await db.from('vendas').delete().eq('id', id);
   await upsertEstoque(produto_id, local_id, qtd);
   carregarVendas();
 };
 
-// ── TRANSFERÊNCIAS ────────────────────────────────────────────────
+// â”€â”€ TRANSFERÃŠNCIAS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function carregarTransferencias() {
   const { data } = await db.from('transferencias')
     .select('*, produtos(nome), origem:local_origem_id(nome), destino:local_destino_id(nome)')
-    .eq('user_id', usuario.id)
-    .order('data_transferencia', { ascending: false })
+        .order('data_transferencia', { ascending: false })
     .limit(50);
 
   const el = document.getElementById('lista-transferencias');
-  if (!data?.length) { el.innerHTML = '<div class="lista-vazia">Nenhuma transferência registrada.</div>'; return; }
+  if (!data?.length) { el.innerHTML = '<div class="lista-vazia">Nenhuma transferÃªncia registrada.</div>'; return; }
   el.innerHTML = `<table class="tabela">
     <thead><tr><th>Data</th><th>Produto</th><th>Origem</th><th>Destino</th><th>Qtd</th><th></th></tr></thead>
     <tbody>${data.map(t => `<tr>
       <td>${t.data_transferencia}</td>
-      <td>${t.produtos?.nome || '—'}</td>
-      <td>${t.origem?.nome   || '—'}</td>
-      <td>${t.destino?.nome  || '—'}</td>
+      <td>${t.produtos?.nome || 'â€”'}</td>
+      <td>${t.origem?.nome   || 'â€”'}</td>
+      <td>${t.destino?.nome  || 'â€”'}</td>
       <td>${t.quantidade}</td>
-      <td><button class="btn-icon deletar" onclick="deletarTransferencia('${t.id}', '${t.produto_id}', '${t.local_origem_id}', '${t.local_destino_id}', ${t.quantidade})">🗑️</button></td>
+      <td><button class="btn-icon deletar" onclick="deletarTransferencia('${t.id}', '${t.produto_id}', '${t.local_origem_id}', '${t.local_destino_id}', ${t.quantidade})">ðŸ—‘ï¸</button></td>
     </tr>`).join('')}</tbody>
   </table>`;
 }
@@ -759,7 +752,7 @@ document.getElementById('btn-nova-transferencia').addEventListener('click', asyn
 });
 document.getElementById('btn-cancelar-transf').addEventListener('click', () => { document.getElementById('modal-transferencia').style.display = 'none'; });
 
-// Verificar estoque disponível ao mudar produto/origem
+// Verificar estoque disponÃ­vel ao mudar produto/origem
 ['transf-produto', 'transf-origem'].forEach(id => {
   document.getElementById(id)?.addEventListener('change', async () => {
     const prod = document.getElementById('transf-produto').value;
@@ -768,7 +761,7 @@ document.getElementById('btn-cancelar-transf').addEventListener('click', () => {
     if (prod && orig) {
       const { data } = await db.from('estoque_local').select('quantidade').eq('produto_id', prod).eq('local_id', orig).maybeSingle();
       const disp = data?.quantidade || 0;
-      aviso.textContent = `Disponível na origem: ${disp} un.`;
+      aviso.textContent = `DisponÃ­vel na origem: ${disp} un.`;
       aviso.style.display = 'block';
       aviso.style.background = disp > 0 ? 'rgba(16,185,129,.1)' : 'rgba(239,68,68,.1)';
       aviso.style.borderColor = disp > 0 ? 'rgba(16,185,129,.4)' : 'rgba(239,68,68,.4)';
@@ -787,36 +780,35 @@ document.getElementById('btn-salvar-transf').addEventListener('click', async () 
   if (!produto_id)            { toast('Selecione o produto.', 'err'); return; }
   if (!origem_id)             { toast('Selecione a origem.', 'err'); return; }
   if (!destino_id)            { toast('Selecione o destino.', 'err'); return; }
-  if (origem_id === destino_id) { toast('Origem e destino não podem ser iguais.', 'err'); return; }
+  if (origem_id === destino_id) { toast('Origem e destino nÃ£o podem ser iguais.', 'err'); return; }
   if (qtd <= 0)               { toast('Informe a quantidade.', 'err'); return; }
 
   const { data: es } = await db.from('estoque_local').select('quantidade').eq('produto_id', produto_id).eq('local_id', origem_id).maybeSingle();
-  if (!es || (es.quantidade || 0) < qtd) { toast(`Estoque insuficiente na origem (disponível: ${es?.quantidade || 0}).`, 'err'); return; }
+  if (!es || (es.quantidade || 0) < qtd) { toast(`Estoque insuficiente na origem (disponÃ­vel: ${es?.quantidade || 0}).`, 'err'); return; }
 
   const { error } = await db.from('transferencias').insert({ user_id: usuario.id, produto_id, local_origem_id: origem_id, local_destino_id: destino_id, quantidade: qtd, data_transferencia: data_t });
   if (error) { toast('Erro: ' + error.message, 'err'); return; }
 
   await upsertEstoque(produto_id, origem_id, -qtd);
   await upsertEstoque(produto_id, destino_id, qtd);
-  toast('Transferência realizada!');
+  toast('TransferÃªncia realizada!');
   document.getElementById('modal-transferencia').style.display = 'none';
   carregarTransferencias();
 });
 
 window.deletarTransferencia = async (id, produto_id, orig, dest, qtd) => {
-  if (!confirmar('Desfazer esta transferência?')) return;
+  if (!confirmar('Desfazer esta transferÃªncia?')) return;
   await db.from('transferencias').delete().eq('id', id);
   await upsertEstoque(produto_id, orig,  qtd);
   await upsertEstoque(produto_id, dest, -qtd);
   carregarTransferencias();
 };
 
-// ── ESTOQUE ───────────────────────────────────────────────────────
+// â”€â”€ ESTOQUE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function carregarEstoque() {
   const { data } = await db.from('estoque_local')
     .select('quantidade, produtos(id, nome), locais(id, nome)')
-    .eq('user_id', usuario.id)
-    .order('quantidade', { ascending: false });
+        .order('quantidade', { ascending: false });
 
   const el = document.getElementById('painel-estoque');
   if (!data?.length) { el.innerHTML = '<div class="lista-vazia">Sem estoque registrado.</div>'; return; }
@@ -830,7 +822,7 @@ async function carregarEstoque() {
 
   el.innerHTML = Object.entries(porLocal).map(([loc, items]) => `
     <div class="estoque-local-card">
-      <div class="estoque-local-titulo">📍 ${loc}</div>
+      <div class="estoque-local-titulo">ðŸ“ ${loc}</div>
       <div class="estoque-grid">
         ${items.map(i => `
           <div class="estoque-item">
@@ -844,16 +836,16 @@ async function carregarEstoque() {
 
 document.getElementById('btn-atualizar-estoque').addEventListener('click', carregarEstoque);
 
-// ── RELATÓRIOS ────────────────────────────────────────────────────
+// â”€â”€ RELATÃ“RIOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function carregarRelatorios() {
   const mes = document.getElementById('rel-mes')?.value || mesAtual();
   const ini = mes + '-01', fim = mes + '-31';
   const el  = document.getElementById('painel-relatorios');
 
   const [{ data: vendas }, { data: despesas }, { data: producoes }] = await Promise.all([
-    db.from('vendas').select('valor_total, quantidade, produtos(nome)').eq('user_id', usuario.id).gte('data_venda', ini).lte('data_venda', fim),
-    db.from('despesas').select('valor_total, insumos(nome)').eq('user_id', usuario.id).gte('data_compra', ini).lte('data_compra', fim),
-    db.from('producoes').select('quantidade, custo_estimado, produtos(nome)').eq('user_id', usuario.id).gte('data_producao', ini).lte('data_producao', fim),
+    db.from('vendas').select('valor_total, quantidade, produtos(nome)').gte('data_venda', ini).lte('data_venda', fim),
+    db.from('despesas').select('valor_total, insumos(nome)').gte('data_compra', ini).lte('data_compra', fim),
+    db.from('producoes').select('quantidade, custo_estimado, produtos(nome)').gte('data_producao', ini).lte('data_producao', fim),
   ]);
 
   const receita  = (vendas    || []).reduce((s, v) => s + parseFloat(v.valor_total || 0), 0);
@@ -882,7 +874,7 @@ async function carregarRelatorios() {
     <div class="rel-grid">
       <div class="rel-card"><span class="rel-valor" style="color:var(--green)">${R$(receita)}</span><span class="rel-label">Receita</span></div>
       <div class="rel-card"><span class="rel-valor" style="color:var(--red)">${R$(despesa)}</span><span class="rel-label">Despesas</span></div>
-      <div class="rel-card"><span class="rel-valor" style="color:${lucro >= 0 ? 'var(--green)' : 'var(--red)'}">${R$(lucro)}</span><span class="rel-label">Lucro líquido</span></div>
+      <div class="rel-card"><span class="rel-valor" style="color:${lucro >= 0 ? 'var(--green)' : 'var(--red)'}">${R$(lucro)}</span><span class="rel-label">Lucro lÃ­quido</span></div>
       <div class="rel-card"><span class="rel-valor">${qtdVend}</span><span class="rel-label">Trufas vendidas</span></div>
       <div class="rel-card"><span class="rel-valor">${qtdProd}</span><span class="rel-label">Trufas produzidas</span></div>
     </div>
@@ -890,13 +882,13 @@ async function carregarRelatorios() {
     <div class="rel-section">
       <div class="rel-section-titulo">Vendas por produto</div>
       ${Object.keys(porProd).length ? `<table class="tabela">
-        <thead><tr><th>Produto</th><th>Qtd</th><th>Receita</th><th>Preço médio</th></tr></thead>
+        <thead><tr><th>Produto</th><th>Qtd</th><th>Receita</th><th>PreÃ§o mÃ©dio</th></tr></thead>
         <tbody>${Object.entries(porProd).sort((a,b) => b[1].valor - a[1].valor).map(([n, v]) => `<tr>
           <td>${n}</td><td>${v.qtd}</td>
           <td style="color:var(--green)">${R$(v.valor)}</td>
           <td style="color:var(--muted)">${R$(v.qtd > 0 ? v.valor/v.qtd : 0)}</td>
         </tr>`).join('')}</tbody>
-      </table>` : '<div class="lista-vazia">Sem vendas neste mês.</div>'}
+      </table>` : '<div class="lista-vazia">Sem vendas neste mÃªs.</div>'}
     </div>
 
     <div class="rel-section">
@@ -906,11 +898,11 @@ async function carregarRelatorios() {
         <tbody>${Object.entries(porInsumo).sort((a,b) => b[1] - a[1]).map(([n, v]) => `<tr>
           <td>${n}</td><td style="color:var(--red)">${R$(v)}</td>
         </tr>`).join('')}</tbody>
-      </table>` : '<div class="lista-vazia">Sem despesas neste mês.</div>'}
+      </table>` : '<div class="lista-vazia">Sem despesas neste mÃªs.</div>'}
     </div>`;
 }
 
-// ── CONFIGURAÇÕES / PARCEIROS ─────────────────────────────────────
+// â”€â”€ CONFIGURAÃ‡Ã•ES / PARCEIROS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function carregarConfiguracoes() {
   const el = document.getElementById('config-usuario-info');
   if (el) el.textContent = usuario.email;
@@ -927,18 +919,18 @@ async function carregarConfiguracoes() {
 
   lista.innerHTML = data.map(p => {
     const isOwner  = p.user_id_a === usuario.id;
-    const label    = isOwner ? p.email_b : 'você (convidado)';
+    const label    = isOwner ? p.email_b : 'vocÃª (convidado)';
     const badge    = p.status === 'ativo'
       ? '<span class="badge badge-ok">ativo</span>'
       : '<span class="badge badge-pend">pendente</span>';
     return `<div class="parceiro-item">
       <div>
         <div style="font-size:.88rem;font-weight:600">${label}</div>
-        <div style="font-size:.75rem;color:var(--muted)">${isOwner ? 'convidado por você' : 'convidado por ' + p.user_id_a}</div>
+        <div style="font-size:.75rem;color:var(--muted)">${isOwner ? 'convidado por vocÃª' : 'convidado por ' + p.user_id_a}</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         ${badge}
-        ${isOwner ? `<button class="btn-icon deletar" onclick="removerParceiro('${p.id}')">🗑️</button>` : ''}
+        ${isOwner ? `<button class="btn-icon deletar" onclick="removerParceiro('${p.id}')">ðŸ—‘ï¸</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -947,7 +939,7 @@ async function carregarConfiguracoes() {
 document.getElementById('btn-enviar-convite').addEventListener('click', async () => {
   const email = document.getElementById('convite-email').value.trim().toLowerCase();
   if (!email) { toast('Informe o e-mail.', 'err'); return; }
-  if (email === usuario.email) { toast('Você não pode convidar a si mesmo.', 'err'); return; }
+  if (email === usuario.email) { toast('VocÃª nÃ£o pode convidar a si mesmo.', 'err'); return; }
 
   const { error } = await db.from('parceiros').insert({
     user_id_a: usuario.id,
@@ -955,11 +947,11 @@ document.getElementById('btn-enviar-convite').addEventListener('click', async ()
     status: 'pendente',
   });
 
-  if (error?.code === '23505') { toast('Este e-mail já foi convidado.', 'err'); return; }
+  if (error?.code === '23505') { toast('Este e-mail jÃ¡ foi convidado.', 'err'); return; }
   if (error) { toast('Erro: ' + error.message, 'err'); return; }
 
   document.getElementById('convite-email').value = '';
-  toast('Convite enviado! A pessoa verá os dados ao fazer login.');
+  toast('Convite enviado! A pessoa verÃ¡ os dados ao fazer login.');
   carregarConfiguracoes();
 });
 
@@ -975,5 +967,6 @@ window.removerParceiro = async (id) => {
   carregarConfiguracoes();
 };
 
-// ── Init ──────────────────────────────────────────────────────────
+// â”€â”€ Init â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 initAuth();
+
