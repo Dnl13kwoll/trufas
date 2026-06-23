@@ -97,6 +97,7 @@ function mostrarLogin() {
   appCarregado = false;
   document.getElementById('tela-login').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
+  window._scene3d?.start();
 }
 
 async function garantirPerfil(user) {
@@ -124,6 +125,7 @@ function mostrarApp(user) {
   if (appCarregado) return; // token refresh — não reinicializar
   appCarregado = true;
 
+  window._scene3d?.stop();
   document.getElementById('tela-login').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
 
@@ -170,6 +172,7 @@ async function carregarDashboard() {
   document.getElementById('dash-despesa').textContent = R$(despesa);
   document.getElementById('dash-lucro').textContent   = R$(lucro);
   document.getElementById('dash-estoque').textContent = totalEstoque;
+  aplicarTilt('.dash-card');
 
   // Estoque por local
   const { data: estoqueDetalhado } = await db
@@ -999,5 +1002,29 @@ window.removerParceiro = async (id) => {
   carregarConfiguracoes();
 };
 
+// ── Efeito 3D nos cards ───────────────────────────────────────────
+function aplicarTilt(seletor) {
+  document.querySelectorAll(seletor).forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const r = card.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width  - 0.5;
+      const y = (e.clientY - r.top)  / r.height - 0.5;
+      card.style.transform = `perspective(600px) rotateX(${-y * 12}deg) rotateY(${x * 12}deg) scale(1.03)`;
+    });
+    card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+
+    // Touch (mobile)
+    card.addEventListener('touchmove', e => {
+      const r = card.getBoundingClientRect();
+      const t = e.touches[0];
+      const x = (t.clientX - r.left) / r.width  - 0.5;
+      const y = (t.clientY - r.top)  / r.height - 0.5;
+      card.style.transform = `perspective(600px) rotateX(${-y * 8}deg) rotateY(${x * 8}deg) scale(1.02)`;
+    }, { passive: true });
+    card.addEventListener('touchend', () => { card.style.transform = ''; });
+  });
+}
+
 // ── Init ──────────────────────────────────────────────────────────
 initAuth();
+window._scene3d?.start();
