@@ -24,6 +24,51 @@ body {
   font-size: 15px;
 }
 
+/* ── ANIMAÇÕES DE ENTRADA ────────────────────────────────────────── */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.anim-entrada {
+  animation: slideUp 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.anim-fade {
+  animation: fadeIn 0.3s ease both;
+}
+
+/* ── SKELETON LOADING ────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg,
+    var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius);
+}
+.sk-card  { height: 76px; margin-bottom: 10px; }
+.sk-linha { height: 14px; margin-bottom: 8px; border-radius: 6px; }
+.sk-kpi   { height: 90px; border-radius: var(--radius); }
+
+/* ── ANIMAÇÃO DOS MODAIS ─────────────────────────────────────────── */
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(48px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.modal        { animation: overlayIn 0.2s ease both; }
+.modal-card   { animation: modalIn 0.35s cubic-bezier(0.34, 1.4, 0.64, 1) both; }
+
 /* ── LOGIN ─────────────────────────────────────────────────────── */
 .tela-login {
   min-height: 100vh;

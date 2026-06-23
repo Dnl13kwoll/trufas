@@ -24,6 +24,24 @@ function toast(msg, tipo = 'ok') {
 
 function confirmar(msg) { return confirm(msg); }
 
+function skeleton(el, tipo = 'cards', n = 3) {
+  if (tipo === 'cards') {
+    el.innerHTML = Array(n).fill(`<div class="skeleton sk-card"></div>`).join('');
+  } else if (tipo === 'tabela') {
+    el.innerHTML = Array(n).fill(`
+      <div class="anim-fade" style="display:flex;gap:10px;margin-bottom:8px">
+        <div class="skeleton sk-linha" style="flex:0.8"></div>
+        <div class="skeleton sk-linha" style="flex:2"></div>
+        <div class="skeleton sk-linha" style="flex:1"></div>
+        <div class="skeleton sk-linha" style="flex:0.8"></div>
+      </div>`).join('');
+  } else if (tipo === 'kpi') {
+    el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px">
+      ${Array(4).fill(`<div class="skeleton sk-kpi"></div>`).join('')}
+    </div>`;
+  }
+}
+
 // ── Navegação ─────────────────────────────────────────────────────
 const TITULOS = {
   dashboard: 'Dashboard', insumos: 'Insumos', locais: 'Locais',
@@ -153,6 +171,7 @@ async function popularSelect(id, tabela, placeholder = 'Selecione...') {
 
 // ── DASHBOARD ─────────────────────────────────────────────────────
 async function carregarDashboard() {
+  skeleton(document.getElementById('dash-estoque-local'), 'kpi');
   const mc = mesAtual();
   const ini = mc + '-01';
   const fim = mc + '-31';
@@ -228,11 +247,12 @@ async function carregarDashboard() {
 let insumoEditandoId = null;
 
 async function carregarInsumos() {
-  const { data } = await db.from('insumos').select('*').eq('ativo', true).order('nome');
   const el = document.getElementById('lista-insumos');
+  skeleton(el);
+  const { data } = await db.from('insumos').select('*').eq('ativo', true).order('nome');
   if (!data?.length) { el.innerHTML = '<div class="lista-vazia">Nenhum insumo cadastrado.</div>'; return; }
-  el.innerHTML = data.map(i => `
-    <div class="item-card">
+  el.innerHTML = data.map((i, idx) => `
+    <div class="item-card anim-entrada" style="animation-delay:${idx * 0.06}s">
       <div class="item-card-header">
         <span class="item-card-nome">${i.nome}</span>
         <div class="item-card-acoes">
@@ -298,11 +318,12 @@ window.deletarInsumo = async (id) => {
 let localEditandoId = null;
 
 async function carregarLocais() {
-  const { data } = await db.from('locais').select('*').eq('ativo', true).order('nome');
   const el = document.getElementById('lista-locais');
+  skeleton(el);
+  const { data } = await db.from('locais').select('*').eq('ativo', true).order('nome');
   if (!data?.length) { el.innerHTML = '<div class="lista-vazia">Nenhum local cadastrado.</div>'; return; }
-  el.innerHTML = data.map(l => `
-    <div class="item-card">
+  el.innerHTML = data.map((l, idx) => `
+    <div class="item-card anim-entrada" style="animation-delay:${idx * 0.06}s">
       <div class="item-card-header">
         <span class="item-card-nome">📍 ${l.nome}</span>
         <div class="item-card-acoes">
@@ -359,11 +380,12 @@ window.deletarLocal = async (id) => {
 let produtoEditandoId = null;
 
 async function carregarProdutos() {
-  const { data } = await db.from('produtos').select('*').eq('ativo', true).order('nome');
   const el = document.getElementById('lista-produtos');
+  skeleton(el);
+  const { data } = await db.from('produtos').select('*').eq('ativo', true).order('nome');
   if (!data?.length) { el.innerHTML = '<div class="lista-vazia">Nenhum produto cadastrado.</div>'; return; }
-  el.innerHTML = data.map(p => `
-    <div class="item-card">
+  el.innerHTML = data.map((p, idx) => `
+    <div class="item-card anim-entrada" style="animation-delay:${idx * 0.06}s">
       <div class="item-card-header">
         <span class="item-card-nome">🍬 ${p.nome}</span>
         <div class="item-card-acoes">
@@ -422,6 +444,7 @@ window.deletarProduto = async (id) => {
 
 // ── DESPESAS ──────────────────────────────────────────────────────
 async function carregarDespesas() {
+  skeleton(document.getElementById('lista-despesas'), 'tabela', 4);
   const mes = document.getElementById('despesa-filtro-mes')?.value || mesAtual();
   const ini = mes + '-01', fim = mes + '-31';
 
@@ -558,17 +581,18 @@ window.deletarDespesa = async (id) => {
 
 // ── PRODUÇÃO ──────────────────────────────────────────────────────
 async function carregarProducoes() {
+  const el = document.getElementById('lista-producoes');
+  skeleton(el, 'tabela', 5);
   const { data } = await db.from('producoes')
     .select('*, produtos(nome), locais(nome)')
-    
+
     .order('data_producao', { ascending: false })
     .limit(50);
 
-  const el = document.getElementById('lista-producoes');
   if (!data?.length) { el.innerHTML = '<div class="lista-vazia">Nenhuma produção registrada.</div>'; return; }
   el.innerHTML = `<table class="tabela">
     <thead><tr><th>Data</th><th>Produto</th><th>Local</th><th>Qtd</th><th>Custo</th><th></th></tr></thead>
-    <tbody>${data.map(p => `<tr>
+    <tbody>${data.map((p, idx) => `<tr class="anim-entrada" style="animation-delay:${idx*0.06}s">
       <td>${p.data_producao}</td>
       <td>${p.produtos?.nome || '—'}</td>
       <td>${p.locais?.nome   || '—'}</td>
@@ -668,16 +692,17 @@ function atualizarPrecoVenda() {
   info.style.display = 'block';
 }
 async function carregarVendas() {
+  const el = document.getElementById('lista-vendas');
+  skeleton(el, 'tabela', 5);
   const mes = document.getElementById('venda-filtro-mes')?.value || mesAtual();
   const ini = mes + '-01', fim = mes + '-31';
 
   const { data } = await db.from('vendas')
     .select('*, produtos(nome), locais(nome)')
-    
+
     .gte('data_venda', ini).lte('data_venda', fim)
     .order('data_venda', { ascending: false });
 
-  const el = document.getElementById('lista-vendas');
   if (!data?.length) { el.innerHTML = '<div class="lista-vazia">Nenhuma venda neste mês.</div>'; return; }
 
   const total = data.reduce((s, v) => s + parseFloat(v.valor_total || 0), 0);
@@ -685,7 +710,7 @@ async function carregarVendas() {
     <div style="margin-bottom:10px;font-size:.85rem;color:var(--muted)">Total: <strong style="color:var(--green)">${R$(total)}</strong></div>
     <table class="tabela">
       <thead><tr><th>Data</th><th>Produto</th><th>Local</th><th>Qtd</th><th>Valor</th><th></th></tr></thead>
-      <tbody>${data.map(v => `<tr>
+      <tbody>${data.map((v, idx) => `<tr class="anim-entrada" style="animation-delay:${idx*0.06}s">
         <td>${v.data_venda}</td>
         <td>${v.produtos?.nome || '—'}</td>
         <td>${v.locais?.nome   || '—'}</td>
@@ -752,17 +777,18 @@ window.deletarVenda = async (id, produto_id, local_id, qtd) => {
 
 // ── TRANSFERÊNCIAS ────────────────────────────────────────────────
 async function carregarTransferencias() {
+  const el = document.getElementById('lista-transferencias');
+  skeleton(el, 'tabela', 5);
   const { data } = await db.from('transferencias')
     .select('*, produtos(nome), origem:local_origem_id(nome), destino:local_destino_id(nome)')
-    
+
     .order('data_transferencia', { ascending: false })
     .limit(50);
 
-  const el = document.getElementById('lista-transferencias');
   if (!data?.length) { el.innerHTML = '<div class="lista-vazia">Nenhuma transferência registrada.</div>'; return; }
   el.innerHTML = `<table class="tabela">
     <thead><tr><th>Data</th><th>Produto</th><th>Origem</th><th>Destino</th><th>Qtd</th><th></th></tr></thead>
-    <tbody>${data.map(t => `<tr>
+    <tbody>${data.map((t, idx) => `<tr class="anim-entrada" style="animation-delay:${idx*0.06}s">
       <td>${t.data_transferencia}</td>
       <td>${t.produtos?.nome || '—'}</td>
       <td>${t.origem?.nome   || '—'}</td>
@@ -840,12 +866,13 @@ window.deletarTransferencia = async (id, produto_id, orig, dest, qtd) => {
 
 // ── ESTOQUE ───────────────────────────────────────────────────────
 async function carregarEstoque() {
+  const el = document.getElementById('painel-estoque');
+  skeleton(el, 'card', 3);
   const { data } = await db.from('estoque_local')
     .select('quantidade, produtos(id, nome), locais(id, nome)')
-    
+
     .order('quantidade', { ascending: false });
 
-  const el = document.getElementById('painel-estoque');
   if (!data?.length) { el.innerHTML = '<div class="lista-vazia">Sem estoque registrado.</div>'; return; }
 
   const porLocal = {};
@@ -855,8 +882,8 @@ async function carregarEstoque() {
     porLocal[loc].push({ produto: e.produtos?.nome || '?', qtd: e.quantidade });
   });
 
-  el.innerHTML = Object.entries(porLocal).map(([loc, items]) => `
-    <div class="estoque-local-card">
+  el.innerHTML = Object.entries(porLocal).map(([loc, items], idx) => `
+    <div class="estoque-local-card anim-entrada" style="animation-delay:${idx*0.08}s">
       <div class="estoque-local-titulo">📍 ${loc}</div>
       <div class="estoque-grid">
         ${items.map(i => `
@@ -876,6 +903,7 @@ async function carregarRelatorios() {
   const mes = document.getElementById('rel-mes')?.value || mesAtual();
   const ini = mes + '-01', fim = mes + '-31';
   const el  = document.getElementById('painel-relatorios');
+  skeleton(el, 'kpi', 5);
 
   const [{ data: vendas }, { data: despesas }, { data: producoes }] = await Promise.all([
     db.from('vendas').select('valor_total, quantidade, produto_id, produtos(nome)').gte('data_venda', ini).lte('data_venda', fim),
@@ -907,18 +935,18 @@ async function carregarRelatorios() {
 
   el.innerHTML = `
     <div class="rel-grid">
-      <div class="rel-card"><span class="rel-valor" style="color:var(--green)">${R$(receita)}</span><span class="rel-label">Receita</span></div>
-      <div class="rel-card"><span class="rel-valor" style="color:var(--red)">${R$(despesa)}</span><span class="rel-label">Despesas</span></div>
-      <div class="rel-card"><span class="rel-valor" style="color:${lucro >= 0 ? 'var(--green)' : 'var(--red)'}">${R$(lucro)}</span><span class="rel-label">Lucro líquido</span></div>
-      <div class="rel-card"><span class="rel-valor">${qtdVend}</span><span class="rel-label">Trufas vendidas</span></div>
-      <div class="rel-card"><span class="rel-valor">${qtdProd}</span><span class="rel-label">Trufas produzidas</span></div>
+      <div class="rel-card anim-entrada" style="animation-delay:0s"><span class="rel-valor" style="color:var(--green)">${R$(receita)}</span><span class="rel-label">Receita</span></div>
+      <div class="rel-card anim-entrada" style="animation-delay:0.06s"><span class="rel-valor" style="color:var(--red)">${R$(despesa)}</span><span class="rel-label">Despesas</span></div>
+      <div class="rel-card anim-entrada" style="animation-delay:0.12s"><span class="rel-valor" style="color:${lucro >= 0 ? 'var(--green)' : 'var(--red)'}">${R$(lucro)}</span><span class="rel-label">Lucro líquido</span></div>
+      <div class="rel-card anim-entrada" style="animation-delay:0.18s"><span class="rel-valor">${qtdVend}</span><span class="rel-label">Trufas vendidas</span></div>
+      <div class="rel-card anim-entrada" style="animation-delay:0.24s"><span class="rel-valor">${qtdProd}</span><span class="rel-label">Trufas produzidas</span></div>
     </div>
 
-    <div class="rel-section">
+    <div class="rel-section anim-entrada" style="animation-delay:0.32s">
       <div class="rel-section-titulo">Vendas por produto</div>
       ${Object.keys(porProd).length ? `<table class="tabela">
         <thead><tr><th>Produto</th><th>Qtd</th><th>Receita</th><th>Preço médio</th></tr></thead>
-        <tbody>${Object.entries(porProd).sort((a,b) => b[1].valor - a[1].valor).map(([n, v]) => `<tr>
+        <tbody>${Object.entries(porProd).sort((a,b) => b[1].valor - a[1].valor).map(([n, v], idx) => `<tr class="anim-entrada" style="animation-delay:${0.38 + idx*0.05}s">
           <td>${n}</td><td>${v.qtd}</td>
           <td style="color:var(--green)">${R$(v.valor)}</td>
           <td style="color:var(--muted)">${R$(v.qtd > 0 ? v.valor/v.qtd : 0)}</td>
@@ -926,11 +954,11 @@ async function carregarRelatorios() {
       </table>` : '<div class="lista-vazia">Sem vendas neste mês.</div>'}
     </div>
 
-    <div class="rel-section">
+    <div class="rel-section anim-entrada" style="animation-delay:0.44s">
       <div class="rel-section-titulo">Despesas por insumo</div>
       ${Object.keys(porInsumo).length ? `<table class="tabela">
         <thead><tr><th>Insumo</th><th>Total gasto</th></tr></thead>
-        <tbody>${Object.entries(porInsumo).sort((a,b) => b[1] - a[1]).map(([n, v]) => `<tr>
+        <tbody>${Object.entries(porInsumo).sort((a,b) => b[1] - a[1]).map(([n, v], idx) => `<tr class="anim-entrada" style="animation-delay:${0.5 + idx*0.05}s">
           <td>${n}</td><td style="color:var(--red)">${R$(v)}</td>
         </tr>`).join('')}</tbody>
       </table>` : '<div class="lista-vazia">Sem despesas neste mês.</div>'}
