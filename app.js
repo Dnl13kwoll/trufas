@@ -6,6 +6,7 @@ const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ── Estado ────────────────────────────────────────────────────────
 let usuario = null;
+let appCarregado = false;
 
 // ── Utilitários ───────────────────────────────────────────────────
 function R$(v) { return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -32,6 +33,7 @@ const TITULOS = {
 };
 
 function navegar(tela) {
+  localStorage.setItem('tela_atual', tela);
   document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('ativo'));
 
@@ -92,6 +94,7 @@ async function initAuth() {
 }
 
 function mostrarLogin() {
+  appCarregado = false;
   document.getElementById('tela-login').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
 }
@@ -116,13 +119,16 @@ async function garantirPerfil(user) {
 
 function mostrarApp(user) {
   usuario = user;
+  document.getElementById('usuario-nome').textContent = user.user_metadata?.full_name || user.email || '';
+
+  if (appCarregado) return; // token refresh — não reinicializar
+  appCarregado = true;
+
   document.getElementById('tela-login').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
-  const nome = user.user_metadata?.full_name || user.email || '';
-  document.getElementById('usuario-nome').textContent = nome;
+
   garantirPerfil(user);
 
-  // Inicializar filtros com mês atual
   const mc = mesAtual();
   const dfm = document.getElementById('despesa-filtro-mes');
   const vfm = document.getElementById('venda-filtro-mes');
@@ -131,7 +137,7 @@ function mostrarApp(user) {
   if (vfm) { vfm.value = mc; vfm.addEventListener('change', carregarVendas); }
   if (rm)  { rm.value  = mc; rm.addEventListener('change', carregarRelatorios); }
 
-  navegar('dashboard');
+  navegar(localStorage.getItem('tela_atual') || 'dashboard');
 }
 
 // ── Helpers de selects ────────────────────────────────────────────
@@ -280,7 +286,8 @@ window.editarInsumo = async (id) => {
 
 window.deletarInsumo = async (id) => {
   if (!confirmar('Deletar este insumo?')) return;
-  await db.from('insumos').update({ ativo: false }).eq('id', id);
+  const { error } = await db.from('insumos').update({ ativo: false }).eq('id', id).eq('user_id', usuario.id);
+  if (error) { toast('Erro ao deletar: ' + error.message, 'err'); return; }
   carregarInsumos();
 };
 
@@ -340,7 +347,8 @@ window.editarLocal = async (id) => {
 
 window.deletarLocal = async (id) => {
   if (!confirmar('Deletar este local?')) return;
-  await db.from('locais').update({ ativo: false }).eq('id', id);
+  const { error } = await db.from('locais').update({ ativo: false }).eq('id', id).eq('user_id', usuario.id);
+  if (error) { toast('Erro ao deletar: ' + error.message, 'err'); return; }
   carregarLocais();
 };
 
@@ -404,7 +412,8 @@ window.editarProduto = async (id) => {
 
 window.deletarProduto = async (id) => {
   if (!confirmar('Deletar este produto?')) return;
-  await db.from('produtos').update({ ativo: false }).eq('id', id);
+  const { error } = await db.from('produtos').update({ ativo: false }).eq('id', id).eq('user_id', usuario.id);
+  if (error) { toast('Erro ao deletar: ' + error.message, 'err'); return; }
   carregarProdutos();
 };
 
@@ -539,7 +548,8 @@ document.getElementById('btn-salvar-despesa').addEventListener('click', async ()
 
 window.deletarDespesa = async (id) => {
   if (!confirmar('Deletar esta despesa?')) return;
-  await db.from('despesas').delete().eq('id', id);
+  const { error } = await db.from('despesas').delete().eq('id', id).eq('user_id', usuario.id);
+  if (error) { toast('Erro ao deletar: ' + error.message, 'err'); return; }
   carregarDespesas();
 };
 
@@ -601,7 +611,8 @@ document.getElementById('btn-salvar-producao').addEventListener('click', async (
 
 window.deletarProducao = async (id, produto_id, local_id, qtd) => {
   if (!confirmar('Deletar esta produção? O estoque será ajustado.')) return;
-  await db.from('producoes').delete().eq('id', id);
+  const { error } = await db.from('producoes').delete().eq('id', id).eq('user_id', usuario.id);
+  if (error) { toast('Erro ao deletar: ' + error.message, 'err'); return; }
   await upsertEstoque(produto_id, local_id, -qtd);
   carregarProducoes();
 };
@@ -730,7 +741,8 @@ document.getElementById('btn-salvar-venda').addEventListener('click', async () =
 
 window.deletarVenda = async (id, produto_id, local_id, qtd) => {
   if (!confirmar('Deletar esta venda? O estoque será revertido.')) return;
-  await db.from('vendas').delete().eq('id', id);
+  const { error } = await db.from('vendas').delete().eq('id', id).eq('user_id', usuario.id);
+  if (error) { toast('Erro ao deletar: ' + error.message, 'err'); return; }
   await upsertEstoque(produto_id, local_id, qtd);
   carregarVendas();
 };
@@ -816,7 +828,8 @@ document.getElementById('btn-salvar-transf').addEventListener('click', async () 
 
 window.deletarTransferencia = async (id, produto_id, orig, dest, qtd) => {
   if (!confirmar('Desfazer esta transferência?')) return;
-  await db.from('transferencias').delete().eq('id', id);
+  const { error } = await db.from('transferencias').delete().eq('id', id).eq('user_id', usuario.id);
+  if (error) { toast('Erro ao deletar: ' + error.message, 'err'); return; }
   await upsertEstoque(produto_id, orig,  qtd);
   await upsertEstoque(produto_id, dest, -qtd);
   carregarTransferencias();
@@ -862,8 +875,8 @@ async function carregarRelatorios() {
   const el  = document.getElementById('painel-relatorios');
 
   const [{ data: vendas }, { data: despesas }, { data: producoes }] = await Promise.all([
-    db.from('vendas').select('valor_total, quantidade, produtos(nome)').gte('data_venda', ini).lte('data_venda', fim),
-    db.from('despesas').select('valor_total, insumos(nome)').gte('data_compra', ini).lte('data_compra', fim),
+    db.from('vendas').select('valor_total, quantidade, produto_id, produtos(nome)').gte('data_venda', ini).lte('data_venda', fim),
+    db.from('despesas').select('valor_total, insumo_id, insumos(nome)').gte('data_compra', ini).lte('data_compra', fim),
     db.from('producoes').select('quantidade, custo_estimado, produtos(nome)').gte('data_producao', ini).lte('data_producao', fim),
   ]);
 

@@ -1,4 +1,4 @@
-const CACHE = 'trufas-v3';
+const CACHE = 'trufas-v4';
 const STATIC = [
   './',
   './index.html',
