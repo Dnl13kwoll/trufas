@@ -309,7 +309,7 @@ window.editarInsumo = async (id) => {
 
 window.deletarInsumo = async (id) => {
   if (!confirmar('Deletar este insumo?')) return;
-  const { error } = await db.from('insumos').update({ ativo: false }).eq('id', id).eq('user_id', usuario.id);
+  const { error } = await db.from('insumos').update({ ativo: false }).eq('id', id);
   if (error) { toast('Erro ao deletar: ' + error.message, 'err'); return; }
   carregarInsumos();
 };
@@ -371,7 +371,7 @@ window.editarLocal = async (id) => {
 
 window.deletarLocal = async (id) => {
   if (!confirmar('Deletar este local?')) return;
-  const { error } = await db.from('locais').update({ ativo: false }).eq('id', id).eq('user_id', usuario.id);
+  const { error } = await db.from('locais').update({ ativo: false }).eq('id', id);
   if (error) { toast('Erro ao deletar: ' + error.message, 'err'); return; }
   carregarLocais();
 };
@@ -437,7 +437,7 @@ window.editarProduto = async (id) => {
 
 window.deletarProduto = async (id) => {
   if (!confirmar('Deletar este produto?')) return;
-  const { error } = await db.from('produtos').update({ ativo: false }).eq('id', id).eq('user_id', usuario.id);
+  const { error } = await db.from('produtos').update({ ativo: false }).eq('id', id);
   if (error) { toast('Erro ao deletar: ' + error.message, 'err'); return; }
   carregarProdutos();
 };
@@ -574,7 +574,7 @@ document.getElementById('btn-salvar-despesa').addEventListener('click', async ()
 
 window.deletarDespesa = async (id) => {
   if (!confirmar('Deletar esta despesa?')) return;
-  const { error } = await db.from('despesas').delete().eq('id', id).eq('user_id', usuario.id);
+  const { error } = await db.from('despesas').delete().eq('id', id);
   if (error) { toast('Erro ao deletar: ' + error.message, 'err'); return; }
   carregarDespesas();
 };
@@ -638,7 +638,7 @@ document.getElementById('btn-salvar-producao').addEventListener('click', async (
 
 window.deletarProducao = async (id, produto_id, local_id, qtd) => {
   if (!confirmar('Deletar esta produção? O estoque será ajustado.')) return;
-  const { error } = await db.from('producoes').delete().eq('id', id).eq('user_id', usuario.id);
+  const { error } = await db.from('producoes').delete().eq('id', id);
   if (error) { toast('Erro ao deletar: ' + error.message, 'err'); return; }
   await upsertEstoque(produto_id, local_id, -qtd);
   carregarProducoes();
@@ -769,7 +769,7 @@ document.getElementById('btn-salvar-venda').addEventListener('click', async () =
 
 window.deletarVenda = async (id, produto_id, local_id, qtd) => {
   if (!confirmar('Deletar esta venda? O estoque será revertido.')) return;
-  const { error } = await db.from('vendas').delete().eq('id', id).eq('user_id', usuario.id);
+  const { error } = await db.from('vendas').delete().eq('id', id);
   if (error) { toast('Erro ao deletar: ' + error.message, 'err'); return; }
   await upsertEstoque(produto_id, local_id, qtd);
   carregarVendas();
@@ -857,7 +857,7 @@ document.getElementById('btn-salvar-transf').addEventListener('click', async () 
 
 window.deletarTransferencia = async (id, produto_id, orig, dest, qtd) => {
   if (!confirmar('Desfazer esta transferência?')) return;
-  const { error } = await db.from('transferencias').delete().eq('id', id).eq('user_id', usuario.id);
+  const { error } = await db.from('transferencias').delete().eq('id', id);
   if (error) { toast('Erro ao deletar: ' + error.message, 'err'); return; }
   await upsertEstoque(produto_id, orig,  qtd);
   await upsertEstoque(produto_id, dest, -qtd);
