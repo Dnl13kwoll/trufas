@@ -1057,6 +1057,133 @@ function aplicarTilt(seletor) {
   });
 }
 
+// ── PDF de Relatório ──────────────────────────────────────────────
+async function gerarPDFRelatorio() {
+  const mes = document.getElementById('rel-mes')?.value || mesAtual();
+  const ini = mes + '-01', fim = fimMes(mes);
+  toast('Gerando PDF...', 'ok');
+
+  const [{ data: vendas }, { data: despesas }, { data: producoes }] = await Promise.all([
+    db.from('vendas').select('valor_total, quantidade, produto_id, produtos(nome)').gte('data_venda', ini).lte('data_venda', fim),
+    db.from('despesas').select('valor_total, insumo_id, insumos(nome)').gte('data_compra', ini).lte('data_compra', fim),
+    db.from('producoes').select('quantidade, custo_estimado, produtos(nome)').gte('data_producao', ini).lte('data_producao', fim),
+  ]);
+
+  const receita = (vendas    || []).reduce((s, v) => s + parseFloat(v.valor_total || 0), 0);
+  const despesa = (despesas  || []).reduce((s, v) => s + parseFloat(v.valor_total || 0), 0);
+  const lucro   = receita - despesa;
+  const qtdVend = (vendas    || []).reduce((s, v) => s + (v.quantidade || 0), 0);
+  const qtdProd = (producoes || []).reduce((s, v) => s + (v.quantidade || 0), 0);
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const [ano, m] = mes.split('-');
+  const nomeMes = new Date(ano, m - 1, 1).toLocaleString('pt-BR', { month: 'long' });
+  const tituloMes = nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1) + ' de ' + ano;
+  const GOLD = [200, 134, 10];
+
+  // Cabeçalho
+  doc.setFillColor(...GOLD);
+  doc.rect(0, 0, 210, 20, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(15);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Relatorio de Trufas', 14, 10);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(tituloMes, 14, 17);
+  doc.setTextColor(0, 0, 0);
+
+  // Resumo
+  let y = 28;
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Resumo do mes', 14, y);
+  doc.autoTable({
+    startY: y + 3,
+    head: [['Indicador', 'Valor']],
+    body: [
+      ['Receita total',      R$(receita)],
+      ['Total de despesas',  R$(despesa)],
+      ['Lucro liquido',      R$(lucro)],
+      ['Trufas vendidas',    qtdVend + ' un.'],
+      ['Trufas produzidas',  qtdProd + ' un.'],
+    ],
+    theme: 'striped',
+    headStyles: { fillColor: GOLD },
+    columnStyles: { 1: { halign: 'right' } },
+  });
+
+  // Vendas por produto
+  const porProd = {};
+  (vendas || []).forEach(v => {
+    const n = v.produtos?.nome || '?';
+    if (!porProd[n]) porProd[n] = { qtd: 0, valor: 0 };
+    porProd[n].qtd   += v.quantidade || 0;
+    porProd[n].valor += parseFloat(v.valor_total || 0);
+  });
+
+  if (Object.keys(porProd).length) {
+    y = doc.lastAutoTable.finalY + 12;
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Vendas por produto', 14, y);
+    doc.autoTable({
+      startY: y + 3,
+      head: [['Produto', 'Qtd', 'Receita', 'Preco medio']],
+      body: Object.entries(porProd)
+        .sort((a, b) => b[1].valor - a[1].valor)
+        .map(([n, v]) => [n, v.qtd + ' un.', R$(v.valor), R$(v.qtd > 0 ? v.valor / v.qtd : 0)]),
+      theme: 'striped',
+      headStyles: { fillColor: GOLD },
+      columnStyles: { 1: { halign: 'center' }, 2: { halign: 'right' }, 3: { halign: 'right' } },
+    });
+  }
+
+  // Despesas por insumo
+  const porInsumo = {};
+  (despesas || []).forEach(d => {
+    const n = d.insumos?.nome || 'Outros';
+    porInsumo[n] = (porInsumo[n] || 0) + parseFloat(d.valor_total || 0);
+  });
+
+  if (Object.keys(porInsumo).length) {
+    y = doc.lastAutoTable.finalY + 12;
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Despesas por insumo', 14, y);
+    doc.autoTable({
+      startY: y + 3,
+      head: [['Insumo', 'Total gasto']],
+      body: Object.entries(porInsumo)
+        .sort((a, b) => b[1] - a[1])
+        .map(([n, v]) => [n, R$(v)]),
+      theme: 'striped',
+      headStyles: { fillColor: GOLD },
+      columnStyles: { 1: { halign: 'right' } },
+    });
+  }
+
+  // Rodapé em todas as páginas
+  const total = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= total; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      'Gerado em ' + new Date().toLocaleDateString('pt-BR') + '  |  Pagina ' + i + ' de ' + total,
+      14, 290
+    );
+  }
+
+  doc.save('relatorio-trufas-' + mes + '.pdf');
+  toast('PDF gerado!', 'ok');
+}
+
+document.getElementById('btn-exportar-pdf').addEventListener('click', gerarPDFRelatorio);
+
 // ── Init ──────────────────────────────────────────────────────────
 initAuth();
 window._scene3d?.start();
