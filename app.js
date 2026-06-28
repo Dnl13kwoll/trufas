@@ -12,6 +12,10 @@ let appCarregado = false;
 function R$(v) { return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function hoje() { return new Date().toISOString().slice(0, 10); }
 function mesAtual() { return new Date().toISOString().slice(0, 7); }
+function fimMes(mes) {
+  const [ano, m] = mes.split('-').map(Number);
+  return `${mes}-${String(new Date(ano, m, 0).getDate()).padStart(2, '0')}`;
+}
 
 function toast(msg, tipo = 'ok') {
   const el = document.getElementById('toast');
@@ -174,7 +178,7 @@ async function carregarDashboard() {
   skeleton(document.getElementById('dash-estoque-local'), 'kpi');
   const mc = mesAtual();
   const ini = mc + '-01';
-  const fim = mc + '-31';
+  const fim = fimMes(mc);
 
   const [{ data: vendas }, { data: despesas }, { data: estoque }] = await Promise.all([
     db.from('vendas').select('valor_total').gte('data_venda', ini).lte('data_venda', fim),
@@ -446,7 +450,7 @@ window.deletarProduto = async (id) => {
 async function carregarDespesas() {
   skeleton(document.getElementById('lista-despesas'), 'tabela', 4);
   const mes = document.getElementById('despesa-filtro-mes')?.value || mesAtual();
-  const ini = mes + '-01', fim = mes + '-31';
+  const ini = mes + '-01', fim = fimMes(mes);
 
   const [{ data }, { data: historico }] = await Promise.all([
     db.from('despesas')
@@ -695,7 +699,7 @@ async function carregarVendas() {
   const el = document.getElementById('lista-vendas');
   skeleton(el, 'tabela', 5);
   const mes = document.getElementById('venda-filtro-mes')?.value || mesAtual();
-  const ini = mes + '-01', fim = mes + '-31';
+  const ini = mes + '-01', fim = fimMes(mes);
 
   const { data } = await db.from('vendas')
     .select('*, produtos(nome), locais(nome)')
@@ -901,7 +905,7 @@ document.getElementById('btn-atualizar-estoque').addEventListener('click', carre
 // ── RELATÓRIOS ────────────────────────────────────────────────────
 async function carregarRelatorios() {
   const mes = document.getElementById('rel-mes')?.value || mesAtual();
-  const ini = mes + '-01', fim = mes + '-31';
+  const ini = mes + '-01', fim = fimMes(mes);
   const el  = document.getElementById('painel-relatorios');
   skeleton(el, 'kpi', 5);
 
