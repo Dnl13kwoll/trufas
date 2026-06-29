@@ -772,10 +772,12 @@ document.getElementById('btn-salvar-venda').addEventListener('click', async () =
   const { error } = await db.from('vendas').insert({ user_id: usuario.id, produto_id, local_id, quantidade: qtd, valor_total: valor, data_venda: data_v, observacao: obs });
   if (error) { toast('Erro: ' + error.message, 'err'); return; }
 
-  await upsertEstoque(produto_id, local_id, -qtd);
+  const ok = await upsertEstoque(produto_id, local_id, -qtd);
+  if (!ok) return;
   toast('Venda registrada!');
   document.getElementById('modal-venda').style.display = 'none';
   carregarVendas();
+  carregarEstoque();
 });
 
 window.deletarVenda = async (id, produto_id, local_id, qtd) => {
@@ -784,6 +786,7 @@ window.deletarVenda = async (id, produto_id, local_id, qtd) => {
   if (error) { toast('Erro ao deletar: ' + error.message, 'err'); return; }
   await upsertEstoque(produto_id, local_id, qtd);
   carregarVendas();
+  carregarEstoque();
 };
 
 // ── TRANSFERÊNCIAS ────────────────────────────────────────────────
@@ -859,11 +862,14 @@ document.getElementById('btn-salvar-transf').addEventListener('click', async () 
   const { error } = await db.from('transferencias').insert({ user_id: usuario.id, produto_id, local_origem_id: origem_id, local_destino_id: destino_id, quantidade: qtd, data_transferencia: data_t });
   if (error) { toast('Erro: ' + error.message, 'err'); return; }
 
-  await upsertEstoque(produto_id, origem_id, -qtd);
-  await upsertEstoque(produto_id, destino_id, qtd);
+  const ok1 = await upsertEstoque(produto_id, origem_id, -qtd);
+  if (!ok1) return;
+  const ok2 = await upsertEstoque(produto_id, destino_id, qtd);
+  if (!ok2) return;
   toast('Transferência realizada!');
   document.getElementById('modal-transferencia').style.display = 'none';
   carregarTransferencias();
+  carregarEstoque();
 });
 
 window.deletarTransferencia = async (id, produto_id, orig, dest, qtd) => {
@@ -873,6 +879,7 @@ window.deletarTransferencia = async (id, produto_id, orig, dest, qtd) => {
   await upsertEstoque(produto_id, orig,  qtd);
   await upsertEstoque(produto_id, dest, -qtd);
   carregarTransferencias();
+  carregarEstoque();
 };
 
 // ── ESTOQUE ───────────────────────────────────────────────────────
@@ -991,16 +998,25 @@ async function carregarConfiguracoes() {
     return;
   }
 
+  const ownerIds = [...new Set(data.filter(p => p.user_id_a !== usuario.id).map(p => p.user_id_a))];
+  const perfilMap = {};
+  if (ownerIds.length) {
+    const { data: perfis } = await db.from('perfis').select('user_id, email, nome').in('user_id', ownerIds);
+    (perfis || []).forEach(p => { perfilMap[p.user_id] = p; });
+  }
+
   lista.innerHTML = data.map(p => {
     const isOwner  = p.user_id_a === usuario.id;
     const label    = isOwner ? p.email_b : 'você (convidado)';
+    const inviter  = perfilMap[p.user_id_a];
+    const inviterLabel = inviter?.nome || inviter?.email || p.email_b || '—';
     const badge    = p.status === 'ativo'
       ? '<span class="badge badge-ok">ativo</span>'
       : '<span class="badge badge-pend">pendente</span>';
     return `<div class="parceiro-item">
       <div>
         <div style="font-size:.88rem;font-weight:600">${label}</div>
-        <div style="font-size:.75rem;color:var(--muted)">${isOwner ? 'convidado por você' : 'convidado por ' + p.user_id_a}</div>
+        <div style="font-size:.75rem;color:var(--muted)">${isOwner ? 'convidado por você' : 'convidado por ' + inviterLabel}</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         ${badge}

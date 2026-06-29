@@ -1,4 +1,4 @@
-const CACHE = 'trufas-v6';
+const CACHE = 'trufas-v7';
 const STATIC = [
   './',
   './index.html',
@@ -31,7 +31,7 @@ self.addEventListener('fetch', e => {
   const url = e.request.url;
 
   // Nunca cachear chamadas ao Supabase ou CDNs externos
-  if (url.includes('supabase.co') || url.includes('cdn.jsdelivr.net')) {
+  if (url.includes('supabase.co') || url.includes('cdn.jsdelivr.net') || url.includes('cdnjs.cloudflare.com')) {
     e.respondWith(fetch(e.request));
     return;
   }
