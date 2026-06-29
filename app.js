@@ -632,12 +632,13 @@ document.getElementById('btn-salvar-producao').addEventListener('click', async (
   const { error } = await db.from('producoes').insert({ user_id: usuario.id, produto_id, local_id, quantidade: qtd, custo_estimado: custo, data_producao: data_p, observacao: obs });
   if (error) { toast('Erro: ' + error.message, 'err'); return; }
 
-  // Atualizar estoque
-  await upsertEstoque(produto_id, local_id, qtd);
+  const ok = await upsertEstoque(produto_id, local_id, qtd);
+  if (!ok) return;
 
   toast('Produção registrada!');
   document.getElementById('modal-producao').style.display = 'none';
   carregarProducoes();
+  carregarEstoque();
 });
 
 window.deletarProducao = async (id, produto_id, local_id, qtd) => {
@@ -646,21 +647,27 @@ window.deletarProducao = async (id, produto_id, local_id, qtd) => {
   if (error) { toast('Erro ao deletar: ' + error.message, 'err'); return; }
   await upsertEstoque(produto_id, local_id, -qtd);
   carregarProducoes();
+  carregarEstoque();
 };
 
 // ── ESTOQUE helper ────────────────────────────────────────────────
 async function upsertEstoque(produto_id, local_id, delta) {
-  const { data: ex } = await db.from('estoque_local')
+  const { data: ex, error: errSelect } = await db.from('estoque_local')
     .select('id, quantidade')
     .eq('produto_id', produto_id).eq('local_id', local_id)
     .maybeSingle();
 
+  if (errSelect) { toast('Erro ao ler estoque: ' + errSelect.message, 'err'); return false; }
+
   if (ex) {
     const nova = Math.max(0, (ex.quantidade || 0) + delta);
-    await db.from('estoque_local').update({ quantidade: nova }).eq('id', ex.id);
+    const { error } = await db.from('estoque_local').update({ quantidade: nova }).eq('id', ex.id);
+    if (error) { toast('Erro ao atualizar estoque: ' + error.message, 'err'); return false; }
   } else if (delta > 0) {
-    await db.from('estoque_local').insert({ user_id: usuario.id, produto_id, local_id, quantidade: delta });
+    const { error } = await db.from('estoque_local').insert({ user_id: usuario.id, produto_id, local_id, quantidade: delta });
+    if (error) { toast('Erro ao criar estoque: ' + error.message, 'err'); return false; }
   }
+  return true;
 }
 
 // ── VENDAS ────────────────────────────────────────────────────────
